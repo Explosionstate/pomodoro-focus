@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>番茄聚焦</title>
+    <style>
+      :root {
+        --bg-1: #f4f0ea;
+        --bg-2: #e9eef2;
+        --ink: #1f1f1f;
+        --muted: #6d6a66;
+        --card: #ffffff;
+        --accent: #c96c4a;
+        --accent-2: #2d7f7e;
+        --shadow: 0 20px 60px rgba(34, 34, 34, 0.14);
+        --radius: 18px;
+        --mono: "Space Mono", "Fira Mono", "Courier New", monospace;
+        --display: "DM Serif Display", "Times New Roman", serif;
+        --body: "Work Sans", "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(1200px 800px at 10% 10%, #f9f6f2, transparent 70%),
+          radial-gradient(900px 700px at 90% 20%, #d8e4e8, transparent 70%),
+          linear-gradient(160deg, var(--bg-1), var(--bg-2));
+        color: var(--ink);
+        font-family: var(--body);
+      }
+
+      .app {
+        width: min(95vw, 1080px);
+        display: grid;
+        grid-template-columns: 1.15fr 1fr;
+        gap: 14px;
+      }
+
+      .wrap {
+        background: var(--card);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 24px 22px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .wrap::before {
+        content: "";
+        position: absolute;
+        inset: -60% auto auto -40%;
+        width: 280px;
+        height: 280px;
+        background: radial-gradient(circle at 40% 40%, rgba(201, 108, 74, 0.18), transparent 60%);
+        pointer-events: none;
+      }
+
+      .wrap::after {
+        content: "";
+        position: absolute;
+        inset: auto -30% -50% auto;
+        width: 260px;
+        height: 260px;
+        background: radial-gradient(circle at 60% 60%, rgba(45, 127, 126, 0.16), transparent 60%);
+        pointer-events: none;
+      }
+
+      .panel { position: relative; z-index: 1; }
+      .section { margin-top: 18px; }
+      .section:first-child { margin-top: 0; }
+
+      header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      h1, h2, h3 {
+        margin: 0;
+        font-family: var(--display);
+        letter-spacing: 0.5px;
+      }
+
+      h1 { font-size: 2rem; }
+      h2 { font-size: 1.45rem; }
+      h3 { font-size: 1.2rem; }
+
+      .count {
+        font-family: var(--mono);
+        font-size: 0.85rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 1.4px;
+      }
+
+      form {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+
+      input[type="text"], input[type="number"] {
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid #e3dfd9;
+        font-size: 0.98rem;
+        background: #fffefb;
+        font-family: var(--body);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(201, 108, 74, 0.16);
+      }
+
+      button {
+        border: none;
+        padding: 0 16px;
+        border-radius: 12px;
+        background: linear-gradient(140deg, var(--accent), #e18d6f);
+        color: #fff;
+        font-size: 0.92rem;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      button.alt { background: linear-gradient(140deg, var(--accent-2), #4d9f9d); }
+      button.soft { background: #f5e7e0; color: #8a4a30; }
+      button:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(201, 108, 74, 0.2); }
+
+      .list {
+        list-style: none;
+        margin: 12px 0 0;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      .list li {
+        background: #fdfaf6;
+        border: 1px solid #eee6dd;
+        border-radius: 14px;
+        padding: 11px 12px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .list li.completed { opacity: 0.72; }
+      .list li.completed .text { text-decoration: line-through; color: var(--muted); }
+      .list li.selected { outline: 2px solid rgba(45, 127, 126, 0.35); }
+
+      .toggle {
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+        border: 2px solid var(--accent-2);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        background: transparent;
+      }
+
+      .list li.completed .toggle { background: var(--accent-2); border-color: var(--accent-2); }
+
+      .toggle::after {
+        content: "";
+        width: 8px;
+        height: 4px;
+        border-left: 2px solid #fff;
+        border-bottom: 2px solid #fff;
+        transform: rotate(-45deg) scale(0);
+        transition: transform 0.15s ease;
+      }
+
+      .list li.completed .toggle::after { transform: rotate(-45deg) scale(1); }
+      .remove { width: 30px; height: 30px; border-radius: 10px; }
+
+      .meta {
+        margin-top: 10px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.84rem;
+        color: var(--muted);
+      }
+
+      .empty {
+        margin-top: 10px;
+        padding: 12px;
+        border-radius: 12px;
+        background: #f7f1ea;
+        color: #7c6c61;
+        font-size: 0.9rem;
+        text-align: center;
+      }
+
+      .cfg {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+      }
+
+      .cfg label {
+        font-size: 0.8rem;
+        color: var(--muted);
+        display: grid;
+        gap: 5px;
+      }
+
+      .cfg .check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .timer {
+        margin-top: 16px;
+        font-family: var(--mono);
+        font-size: 3rem;
+        text-align: center;
+      }
+
+      .phase, .task, .hint, .report { margin-top: 10px; font-size: 0.95rem; }
+      .task strong { color: #145a32; }
+      .hint { color: var(--muted); }
+      .actions { margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .inline-actions { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+      .bottom {
+        grid-column: 1 / -1;
+        background: var(--card);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+
+      .bottom-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 14px;
+      }
+
+      canvas {
+        width: 100%;
+        height: 190px;
+        border-radius: 10px;
+        background: #fff;
+        display: block;
+      }
+
+      .history-list {
+        max-height: 210px;
+        overflow: auto;
+      }
+
+      .history-row {
+        font-size: 0.92rem;
+        border-bottom: 1px dashed #e8ddd3;
+        padding: 8px 2px;
+      }
+
+      .history-row .time {
+        display: block;
+        color: var(--muted);
+        font-size: 0.8rem;
+        margin-top: 2px;
+      }
+
+      @media (max-width: 900px) {
+        .app { grid-template-columns: 1fr; }
+        .cfg { grid-template-columns: 1fr 1fr; }
+        .bottom-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="wrap">
+        <div class="panel">
+          <section class="section">
+            <header>
+              <h1>今日清单</h1>
+              <div class="count" id="count">0 items</div>
+            </header>
+
+            <form id="today-form" autocomplete="off">
+              <input type="text" id="today-input" placeholder="输入一件今天要完成的事" />
+              <button type="submit">添加</button>
+            </form>
+
+            <div id="today-empty" class="empty">先写一条轻松的小事吧。</div>
+            <ul id="today-list" class="list"></ul>
+            <div class="meta"><span>点击小方块完成</span><span>双击删除</span></div>
+          </section>
+
+          <section class="section">
+            <header>
+              <h2>长期清单</h2>
+              <div class="count" id="long-count">0/0 today</div>
+            </header>
+
+            <form id="long-form" autocomplete="off">
+              <input type="text" id="long-input" placeholder="输入每天都要做的长期任务" />
+              <button type="submit">添加</button>
+            </form>
+
+            <div id="long-empty" class="empty">长期清单每天都会重置为待完成。</div>
+            <ul id="long-list" class="list"></ul>
+          </section>
+        </div>
+      </section>
+
+      <section class="wrap">
+        <div class="panel">
+          <h2>当前番茄</h2>
+
+          <div class="cfg">
+            <label>工作(分)<input id="work-min" type="number" min="1" max="180" value="25" /></label>
+            <label>短休(分)<input id="short-min" type="number" min="1" max="60" value="5" /></label>
+            <label>长休(分)<input id="long-min" type="number" min="1" max="120" value="15" /></label>
+            <label>几轮长休<input id="rounds" type="number" min="1" max="12" value="4" /></label>
+            <label>长休开关<span class="check"><input id="enable-long-break" type="checkbox" checked />启用</span></label>
+          </div>
+
+          <form id="task-form" autocomplete="off">
+            <input type="text" id="task-input" placeholder="本次专注任务（必填）例如：复习操作系统第三章" />
+            <button type="button" id="fill-from-todo">用选中任务</button>
+          </form>
+
+          <div class="inline-actions">
+            <button type="button" id="notify-btn" class="alt">开启系统提醒</button>
+            <button type="button" id="clear-history" class="soft">清空历史清单</button>
+          </div>
+
+          <div class="timer" id="timer">25:00</div>
+          <div class="phase" id="phase">阶段：专注</div>
+          <div class="task" id="focus-task">当前任务：<strong>(等待开始)</strong></div>
+          <div class="hint">开始专注前必须定义任务，倒计时只显示这一件事。</div>
+          <div class="report" id="buffer"></div>
+
+          <div class="actions">
+            <button type="button" id="start-btn">开始</button>
+            <button type="button" id="pause-btn" class="alt">柔和打断</button>
+            <button type="button" id="finish-btn" class="soft">完成阶段</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="bottom">
+        <div class="bottom-grid">
+          <div>
+            <h3>专注热力图与周报</h3>
+            <div class="hint" id="weekly">本周番茄 0 | 连续打卡 0 天 | 黄金时间段 暂无数据</div>
+            <canvas id="heatmap"></canvas>
+          </div>
+          <div>
+            <h3>历史清单</h3>
+            <div class="hint">昨天未完成的今日清单会自动归档到这里。</div>
+            <div id="history-empty" class="empty">暂无历史清单。</div>
+            <div id="history-list" class="history-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const LS_TODAY = "pomodoro.today.v2";
+      const LS_LONG = "pomodoro.long.v2";
+      const LS_HISTORY = "pomodoro.history.v2";
+      const LS_SESSIONS = "pomodoro.sessions.v1";
+      const LS_SETTINGS = "pomodoro.settings.v1";
+      const LS_META = "pomodoro.meta.v1";
+      const LS_OLD_TODOS = "pomodoro.todos.v1";
+
+      const el = {
+        todayForm: document.getElementById("today-form"),
+        todayInput: document.getElementById("today-input"),
+        todayList: document.getElementById("today-list"),
+        todayEmpty: document.getElementById("today-empty"),
+        count: document.getElementById("count"),
+        longForm: document.getElementById("long-form"),
+        longInput: document.getElementById("long-input"),
+        longList: document.getElementById("long-list"),
+        longEmpty: document.getElementById("long-empty"),
+        longCount: document.getElementById("long-count"),
+        historyList: document.getElementById("history-list"),
+        historyEmpty: document.getElementById("history-empty"),
+        workMin: document.getElementById("work-min"),
+        shortMin: document.getElementById("short-min"),
+        longMin: document.getElementById("long-min"),
+        rounds: document.getElementById("rounds"),
+        enableLongBreak: document.getElementById("enable-long-break"),
+        taskInput: document.getElementById("task-input"),
+        fillFromTodo: document.getElementById("fill-from-todo"),
+        notifyBtn: document.getElementById("notify-btn"),
+        clearHistory: document.getElementById("clear-history"),
+        timer: document.getElementById("timer"),
+        phase: document.getElementById("phase"),
+        focusTask: document.getElementById("focus-task"),
+        buffer: document.getElementById("buffer"),
+        startBtn: document.getElementById("start-btn"),
+        pauseBtn: document.getElementById("pause-btn"),
+        finishBtn: document.getElementById("finish-btn"),
+        weekly: document.getElementById("weekly"),
+        heatmap: document.getElementById("heatmap"),
+      };
+
+      let todayTodos = load(LS_TODAY, []);
+      let longTodos = load(LS_LONG, []);
+      let historyTodos = load(LS_HISTORY, []);
+      let sessions = load(LS_SESSIONS, []);
+
+      if (!todayTodos.length) {
+        const oldTodos = load(LS_OLD_TODOS, []);
+        if (oldTodos.length) {
+          todayTodos = oldTodos.map((t) => ({ ...t, type: "today" }));
+          save(LS_TODAY, todayTodos);
+        }
+      }
+
+      let selectedTodayId = null;
+      let selectedLongId = null;
+
+      const runtime = {
+        phase: "work",
+        workRounds: 0,
+        isRunning: false,
+        isPaused: false,
+        endAt: 0,
+        startedAt: 0,
+        remainingWhenPaused: 0,
+        pauseBufferUntil: 0,
+        currentTask: "",
+        interruptions: [],
+        lastWorkTask: "",
+      };
+
+      rolloverDayIfNeeded();
+      initSettings();
+      renderTodayTodos();
+      renderLongTodos();
+      renderHistory();
+      refreshAnalytics();
+      refreshTimerUI();
+
+      setInterval(tick, 1000);
+      window.addEventListener("resize", refreshAnalytics);
+
+      function load(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
+        } catch {
+          return fallback;
+        }
+      }
+
+      function save(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+
+      function todayKey() {
+        return dayKey(new Date());
+      }
+
+      function dayKey(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const d = String(dateObj.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+      function rolloverDayIfNeeded() {
+        const meta = load(LS_META, { lastOpenDate: todayKey() });
+        const nowDay = todayKey();
+
+        if (meta.lastOpenDate !== nowDay) {
+          const overdue = todayTodos.filter((t) => !t.done);
+          if (overdue.length) {
+            const movedAt = new Date().toISOString();
+            const records = overdue.map((t) => ({
+              id: crypto.randomUUID(),
+              text: t.text,
+              fromDate: meta.lastOpenDate,
+              movedAt,
+              reason: "昨日未完成",
+            }));
+            historyTodos = [...records, ...historyTodos].slice(0, 1000);
+          }
+
+          todayTodos = [];
+          selectedTodayId = null;
+          save(LS_TODAY, todayTodos);
+          save(LS_HISTORY, historyTodos);
+        }
+
+        meta.lastOpenDate = nowDay;
+        save(LS_META, meta);
+      }
+
+      function initSettings() {
+        const s = load(LS_SETTINGS, { work: 25, short: 5, long: 15, rounds: 4, enableLongBreak: true });
+        el.workMin.value = s.work;
+        el.shortMin.value = s.short;
+        el.longMin.value = s.long;
+        el.rounds.value = s.rounds;
+        el.enableLongBreak.checked = s.enableLongBreak !== false;
+        [el.workMin, el.shortMin, el.longMin, el.rounds, el.enableLongBreak].forEach((n) => {
+          n.addEventListener("change", () => {
+            save(LS_SETTINGS, getSettings());
+            if (!runtime.isRunning && !runtime.isPaused) refreshTimerUI();
+          });
+        });
+      }
+
+      function getSettings() {
+        return {
+          work: Math.max(1, Number(el.workMin.value) || 25),
+          short: Math.max(1, Number(el.shortMin.value) || 5),
+          long: Math.max(1, Number(el.longMin.value) || 15),
+          rounds: Math.max(1, Number(el.rounds.value) || 4),
+          enableLongBreak: Boolean(el.enableLongBreak.checked),
+        };
+      }
+
+      function renderTaskList({ source, container, emptyNode, selectedId, onSelect, onToggle, onDelete, doneChecker }) {
+        container.innerHTML = "";
+        source.forEach((todo, index) => {
+          const item = document.createElement("li");
+          const done = doneChecker(todo);
+          if (done) item.classList.add("completed");
+          if (todo.id === selectedId) item.classList.add("selected");
+
+          const toggle = document.createElement("button");
+          toggle.className = "toggle";
+          toggle.type = "button";
+          toggle.addEventListener("click", () => onToggle(todo, index));
+
+          const text = document.createElement("span");
+          text.className = "text";
+          text.textContent = todo.text;
+
+          const remove = document.createElement("button");
+          remove.className = "remove soft";
+          remove.type = "button";
+          remove.textContent = "×";
+          remove.addEventListener("click", () => onDelete(todo, index));
+
+          item.append(toggle, text, remove);
+          item.addEventListener("click", () => onSelect(todo.id));
+          item.addEventListener("dblclick", () => onDelete(todo, index));
+          container.appendChild(item);
+        });
+
+        emptyNode.style.display = source.length ? "none" : "block";
+      }
+
+      function renderTodayTodos() {
+        renderTaskList({
+          source: todayTodos,
+          container: el.todayList,
+          emptyNode: el.todayEmpty,
+          selectedId: selectedTodayId,
+          onSelect: (id) => {
+            selectedTodayId = id;
+            selectedLongId = null;
+            renderTodayTodos();
+            renderLongTodos();
+          },
+          onToggle: (todo) => {
+            todo.done = !todo.done;
+            save(LS_TODAY, todayTodos);
+            renderTodayTodos();
+          },
+          onDelete: (_todo, index) => {
+            todayTodos.splice(index, 1);
+            save(LS_TODAY, todayTodos);
+            renderTodayTodos();
+          },
+          doneChecker: (todo) => Boolean(todo.done),
+        });
+
+        const remaining = todayTodos.filter((t) => !t.done).length;
+        el.count.textContent = `${remaining} items`;
+      }
+
+      function isLongDoneToday(todo) {
+        return todo.lastDoneDate === todayKey();
+      }
+
+      function renderLongTodos() {
+        renderTaskList({
+          source: longTodos,
+          container: el.longList,
+          emptyNode: el.longEmpty,
+          selectedId: selectedLongId,
+          onSelect: (id) => {
+            selectedLongId = id;
+            selectedTodayId = null;
+            renderTodayTodos();
+            renderLongTodos();
+          },
+          onToggle: (todo) => {
+            todo.lastDoneDate = isLongDoneToday(todo) ? "" : todayKey();
+            save(LS_LONG, longTodos);
+            renderLongTodos();
+          },
+          onDelete: (_todo, index) => {
+            longTodos.splice(index, 1);
+            save(LS_LONG, longTodos);
+            renderLongTodos();
+          },
+          doneChecker: (todo) => isLongDoneToday(todo),
+        });
+
+        const done = longTodos.filter((t) => isLongDoneToday(t)).length;
+        el.longCount.textContent = `${done}/${longTodos.length} today`;
+      }
+
+      function renderHistory() {
+        el.historyList.innerHTML = "";
+        el.historyEmpty.style.display = historyTodos.length ? "none" : "block";
+
+        historyTodos.slice(0, 200).forEach((h) => {
+          const row = document.createElement("div");
+          row.className = "history-row";
+          row.innerHTML = `<div>${escapeHtml(h.text)}</div><span class="time">${h.reason} | 来自 ${h.fromDate}</span>`;
+          el.historyList.appendChild(row);
+        });
+      }
+
+      function escapeHtml(raw) {
+        return raw
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      el.todayForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const value = el.todayInput.value.trim();
+        if (!value) return;
+        todayTodos.unshift({ id: crypto.randomUUID(), text: value, done: false, createdAt: Date.now() });
+        el.todayInput.value = "";
+        save(LS_TODAY, todayTodos);
+        renderTodayTodos();
+      });
+
+      el.longForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const value = el.longInput.value.trim();
+        if (!value) return;
+        longTodos.unshift({ id: crypto.randomUUID(), text: value, lastDoneDate: "" });
+        el.longInput.value = "";
+        save(LS_LONG, longTodos);
+        renderLongTodos();
+      });
+
+      el.fillFromTodo.addEventListener("click", () => {
+        const todaySelected = todayTodos.find((t) => t.id === selectedTodayId && !t.done);
+        const longSelected = longTodos.find((t) => t.id === selectedLongId && !isLongDoneToday(t));
+        const selected = todaySelected || longSelected;
+        if (!selected) return showToast("请先在左侧选中一条未完成任务。", "warn");
+        el.taskInput.value = selected.text;
+      });
+
+      el.notifyBtn.addEventListener("click", () => {
+        requestNotificationPermission();
+      });
+      el.clearHistory.addEventListener("click", () => {
+        historyTodos = [];
+        save(LS_HISTORY, historyTodos);
+        renderHistory();
+      });
+
+      el.startBtn.addEventListener("click", () => {
+        if (runtime.isPaused) return resumeAfterPause();
+        startCurrentPhase(false);
+      });
+
+      el.pauseBtn.addEventListener("click", () => {
+        if (!runtime.isRunning || runtime.phase !== "work") return;
+        const reason = (prompt("中断原因（可留空）", "") || "临时中断").trim() || "临时中断";
+        const bufferMin = Math.max(1, Math.min(15, Number(prompt("缓冲几分钟后恢复（1-15）", "3")) || 3));
+        runtime.remainingWhenPaused = Math.max(0, Math.floor((runtime.endAt - Date.now()) / 1000));
+        runtime.pauseBufferUntil = Date.now() + bufferMin * 60 * 1000;
+        runtime.isRunning = false;
+        runtime.isPaused = true;
+        runtime.interruptions.push({ at: new Date().toISOString(), reason, bufferMinutes: bufferMin });
+        refreshTimerUI();
+      });
+
+      el.finishBtn.addEventListener("click", () => {
+        if (!runtime.isRunning && !runtime.isPaused) return;
+        completePhase();
+      });
+
+      function getPhaseSeconds() {
+        const s = getSettings();
+        if (runtime.phase === "work") return s.work * 60;
+        if (runtime.phase === "short_break") return s.short * 60;
+        return s.long * 60;
+      }
+
+      function phaseName(phase) {
+        return phase === "work" ? "专注" : phase === "short_break" ? "短休" : "长休";
+      }
+
+      function startCurrentPhase(isAuto) {
+        if (runtime.isRunning) return false;
+
+        if (runtime.phase === "work") {
+          const typedTask = el.taskInput.value.trim();
+          const fallbackTask = runtime.lastWorkTask || "继续专注任务";
+          const task = typedTask || (isAuto ? fallbackTask : "");
+          if (!task) {
+            showToast("开始专注前必须输入任务。", "warn");
+            return false;
+          }
+          runtime.currentTask = task;
+          if (isAuto && !typedTask) el.taskInput.value = task;
+        } else {
+          runtime.currentTask = "休息恢复";
+        }
+
+        requestNotificationPermission();
+
+        runtime.startedAt = Date.now();
+        runtime.endAt = Date.now() + getPhaseSeconds() * 1000;
+        runtime.isRunning = true;
+        runtime.isPaused = false;
+        runtime.interruptions = [];
+        refreshTimerUI();
+        return true;
+      }
+
+      function tick() {
+        if (runtime.isRunning) {
+          const remain = Math.max(0, Math.floor((runtime.endAt - Date.now()) / 1000));
+          if (remain === 0) {
+            completePhase();
+            return;
+          }
+        }
+        refreshTimerUI();
+      }
+
+      function refreshTimerUI() {
+        let remain;
+        if (runtime.isRunning) remain = Math.max(0, Math.floor((runtime.endAt - Date.now()) / 1000));
+        else if (runtime.isPaused) remain = runtime.remainingWhenPaused;
+        else remain = getPhaseSeconds();
+
+        const mm = String(Math.floor(remain / 60)).padStart(2, "0");
+        const ss = String(remain % 60).padStart(2, "0");
+
+        el.timer.textContent = `${mm}:${ss}`;
+        el.phase.textContent = `阶段：${phaseName(runtime.phase)}`;
+        el.focusTask.innerHTML = `当前任务：<strong>${runtime.phase === "work" ? runtime.currentTask || "(等待开始)" : "休息恢复"}</strong>`;
+        el.startBtn.textContent = runtime.isPaused ? "恢复" : "开始";
+
+        if (runtime.isPaused) {
+          const wait = Math.max(0, Math.floor((runtime.pauseBufferUntil - Date.now()) / 1000));
+          const bm = String(Math.floor(wait / 60)).padStart(2, "0");
+          const bs = String(wait % 60).padStart(2, "0");
+          el.buffer.textContent = `柔和打断缓冲中，建议等待：${bm}:${bs}`;
+        } else {
+          el.buffer.textContent = "";
+        }
+      }
+
+      function resumeAfterPause() {
+        runtime.isPaused = false;
+        runtime.isRunning = true;
+        runtime.endAt = Date.now() + runtime.remainingWhenPaused * 1000;
+        refreshTimerUI();
+      }
+
+      function completePhase() {
+        const endedAt = Date.now();
+        sessions.push({
+          id: crypto.randomUUID(),
+          taskName: runtime.currentTask || "未命名任务",
+          phase: runtime.phase,
+          startedAt: new Date(runtime.startedAt || Date.now()).toISOString(),
+          endedAt: new Date(endedAt).toISOString(),
+          durationMinutes: Math.max(0, (endedAt - (runtime.startedAt || endedAt)) / 60000),
+          completed: true,
+          interruptions: runtime.interruptions,
+        });
+        save(LS_SESSIONS, sessions);
+
+        const settings = getSettings();
+        if (runtime.phase === "work") {
+          runtime.lastWorkTask = runtime.currentTask || runtime.lastWorkTask;
+          runtime.workRounds += 1;
+          const shouldLongBreak = settings.enableLongBreak && runtime.workRounds % settings.rounds === 0;
+          runtime.phase = shouldLongBreak ? "long_break" : "short_break";
+          runtime.currentTask = "";
+          el.taskInput.value = "";
+          notifySystem("番茄完成", runtime.phase === "long_break" ? "完成一轮专注，进入长休。" : "当前番茄完成，进入短休。");
+        } else {
+          runtime.phase = "work";
+          notifySystem("休息结束", "自动进入下一次番茄。", true);
+        }
+
+        runtime.isRunning = false;
+        runtime.isPaused = false;
+        runtime.startedAt = 0;
+        runtime.endAt = 0;
+        runtime.remainingWhenPaused = 0;
+        runtime.pauseBufferUntil = 0;
+        runtime.interruptions = [];
+
+        startCurrentPhase(true);
+        refreshTimerUI();
+        refreshAnalytics();
+      }
+
+      function hasNativeNotifyBridge() {
+        return Boolean(window.pywebview && window.pywebview.api && window.pywebview.api.request_notification);
+      }
+
+      async function requestNotificationPermission() {
+        if (hasNativeNotifyBridge()) {
+          try {
+            const result = await window.pywebview.api.request_notification();
+            if (result && result.ok) showToast("桌面提醒已开启。", "ok");
+            else showToast("桌面提醒初始化失败。", "warn");
+          } catch {
+            showToast("桌面提醒初始化失败。", "warn");
+          }
+          return;
+        }
+
+        if (!("Notification" in window)) {
+          showToast("当前浏览器不支持系统通知。", "warn");
+          return;
+        }
+        if (Notification.permission === "granted") {
+          showToast("系统提醒已开启。", "ok");
+          return;
+        }
+        if (Notification.permission === "denied") {
+          showToast("通知权限被禁用，请在浏览器设置里开启。", "warn");
+          return;
+        }
+        Notification.requestPermission().then((permission) => {
+          if (permission === "granted") showToast("系统提醒已开启。", "ok");
+          else showToast("你拒绝了系统提醒权限。", "warn");
+        });
+      }
+
+      async function notifySystem(title, body, showToastBackup = false) {
+        if (hasNativeNotifyBridge()) {
+          try {
+            await window.pywebview.api.notify(title, body);
+            return;
+          } catch {
+            if (showToastBackup) showToast(`${title}：${body}`, "ok");
+            return;
+          }
+        }
+
+        if ("Notification" in window && Notification.permission === "granted") {
+          const n = new Notification(title, { body, silent: false });
+          setTimeout(() => n.close(), 5000);
+        } else if (showToastBackup) {
+          showToast(`${title}：${body}`, "ok");
+        }
+      }
+
+      function showToast(text, kind = "ok") {
+        el.buffer.style.color = kind === "warn" ? "#8a4b08" : "#2d7f7e";
+        el.buffer.textContent = text;
+        setTimeout(() => {
+          if (!runtime.isPaused) el.buffer.textContent = "";
+        }, 3500);
+      }
+
+      function refreshAnalytics() {
+        const daily = dailyFocusCounts(365);
+        drawHeatmap(daily);
+
+        const weekTomatoes = Array.from({ length: 7 }).reduce((sum, _, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          return sum + (daily[dayKey(d)] || 0);
+        }, 0);
+
+        let streak = 0;
+        for (let i = 0; i < 365; i++) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          if ((daily[dayKey(d)] || 0) > 0) streak += 1;
+          else break;
+        }
+
+        el.weekly.textContent = `本周番茄 ${weekTomatoes} | 连续打卡 ${streak} 天 | 黄金时间段 ${computeBestWindow()}`;
+      }
+
+      function dailyFocusCounts(days = 365) {
+        const map = {};
+        const start = new Date();
+        start.setDate(start.getDate() - (days - 1));
+        sessions.forEach((s) => {
+          if (s.phase !== "work" || !s.completed) return;
+          const d = new Date(s.startedAt);
+          if (d >= start) map[dayKey(d)] = (map[dayKey(d)] || 0) + 1;
+        });
+        return map;
+      }
+
+      function computeBestWindow() {
+        const recent = sessions.filter((s) => s.phase === "work" && s.completed).slice(-400);
+        if (!recent.length) return "暂无数据";
+
+        const slots = {};
+        recent.forEach((s) => {
+          const t = new Date(s.startedAt);
+          const slot = t.getHours() * 2 + (t.getMinutes() >= 30 ? 1 : 0);
+          slots[slot] = (slots[slot] || 0) + (Number(s.durationMinutes) || 0);
+        });
+
+        const best = Number(Object.keys(slots).sort((a, b) => slots[b] - slots[a])[0]);
+        const sh = Math.floor(best / 2);
+        const sm = best % 2 ? 30 : 0;
+        const end = new Date();
+        end.setHours(sh, sm + 90, 0, 0);
+        return `${String(sh).padStart(2, "0")}:${String(sm).padStart(2, "0")} - ${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`;
+      }
+
+      function drawHeatmap(daily) {
+        const canvas = el.heatmap;
+        const rect = canvas.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        const width = Math.max(640, Math.floor(rect.width));
+        const height = 190;
+
+        canvas.width = Math.floor(width * ratio);
+        canvas.height = Math.floor(height * ratio);
+
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
+
+        const colors = ["#ebedf0", "#c6e48b", "#7bc96f", "#239a3b", "#196127"];
+        const start = new Date();
+        start.setDate(start.getDate() - 364);
+
+        const cell = 10;
+        const gap = 3;
+        const x0 = 34;
+        const y0 = 30;
+
+        ctx.fillStyle = "#6d6a66";
+        ctx.font = "11px Segoe UI";
+        ["一", "二", "三", "四", "五", "六", "日"].forEach((w, i) => {
+          ctx.fillText(w, 8, y0 + i * (cell + gap) + 9);
+        });
+
+        let prevMonth = -1;
+        for (let i = 0; i < 365; i++) {
+          const d = new Date(start);
+          d.setDate(start.getDate() + i);
+          const count = daily[dayKey(d)] || 0;
+          const color = count <= 0 ? colors[0] : count <= 2 ? colors[1] : count <= 4 ? colors[2] : count <= 7 ? colors[3] : colors[4];
+          const week = Math.floor(i / 7);
+          const day = (d.getDay() + 6) % 7;
+          const x = x0 + week * (cell + gap);
+          const y = y0 + day * (cell + gap);
+
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, cell, cell);
+
+          if (d.getDate() <= 7 && d.getMonth() !== prevMonth) {
+            ctx.fillStyle = "#8e8378";
+            ctx.fillText(`${d.getMonth() + 1}月`, x, 14);
+            prevMonth = d.getMonth();
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
