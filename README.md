@@ -1,74 +1,92 @@
-# 番茄聚焦（Pomodoro Focus）
+# Pomodoro Focus
 
-一个开箱即用的 Python 番茄钟项目，目标是让用户快速进入专注状态，并通过数据反馈形成持续习惯。
+一个专注执行导向的番茄钟应用。  
+核心目标：让用户“无脑上手”，清晰规划、持续执行当前任务。
 
-## 功能覆盖
+---
+
+## 功能概览
 
 - 自定义循环流
-  - 工作时长
-  - 短休时长
-  - 长休时长
+  - 工作时长（如 25 分钟）
+  - 短休时长（如 5 分钟）
+  - 长休时长（如 15 分钟）
   - 几轮后进入长休
-- 任务绑定与聚焦
-  - 开始专注前强制输入本次任务
-  - 倒计时只显示当前单一任务
+  - 长休可开关（可禁用）
+
+- 任务绑定与视觉聚焦
+  - 开始专注前必须输入“本次要做什么”
+  - 倒计时阶段只展示当前任务，降低分心
+
 - 柔和打断机制
-  - 遇到临时事项可记录原因
-  - 自动进入缓冲暂停，再恢复专注
-- 待办任务列表
-  - 快速添加/勾选完成
-  - 可从待办一键填入当前专注任务
-- GitHub 式热力图
-  - 展示过去 365 天每日番茄数量
-  - 颜色越深代表专注越多
-- 黄金时间段分析
-  - 基于近期专注记录给出高效时间窗口
-  - 同时展示本周番茄数与连续打卡天数
+  - 专注中可记录中断原因
+  - 缓冲暂停后可恢复原进度继续专注
 
-## 运行方式
+- 清单体系
+  - 今日清单：当天任务管理
+  - 长期清单：每日都要做，按天自动重置完成状态
+  - 历史清单：昨日未完成的今日任务自动归档
 
-### 方式 A：直接点绿色三角运行（推荐）
+- 数据分析
+  - GitHub 风格 365 天专注热力图（绿点矩阵）
+  - 每周黄金时间段分析（高专注时段）
+  - 本周番茄数、连续打卡天数
 
-- 打开 `run_pomodoro.py`
-- 在 IDE（如 PyCharm / VS Code Python）点击运行按钮（绿色三角）即可
-- 无需命令行
+- 通知提醒
+  - 番茄结束与休息结束支持系统提醒
+  - 支持桌面壳通知桥接（更稳定）
 
-### 方式 A2：纯 HTML 页面（无需命令行）
+---
 
-- 直接双击打开 `index.html`
-- 页面内已包含待办、番茄计时、柔和打断、热力图、黄金时间段分析
-- 所有数据保存在浏览器本地 `localStorage`
+## 项目结构
 
-### 打包成双击即开的 EXE
+- `index.html`  
+  主操作页面（UI + 业务逻辑 + 本地数据存储）
 
-- 打开 `build_exe.py`
-- 点击 IDE 运行按钮（绿色三角）
-- 打包完成后，生成文件在：`dist/番茄聚焦.exe`
+- `web_shell.py`  
+  桌面壳（pywebview）入口，支持系统通知桥接
 
-### HTML 桌面壳 EXE（推荐）
+- `edge_launcher.py`  
+  Edge 启动器入口（启动后自动用 Edge 打开页面）
 
-- 打开 `build_web_exe.py`
-- 点击 IDE 运行按钮（绿色三角）
-- 打包完成后，生成文件在：`dist/PomodoroFocusWeb.exe`
-- 此版本使用 `index.html` 作为操作页面，并支持系统右下角提醒
+- `build_web_exe.py`  
+  打包桌面壳 EXE
 
-### Edge 启动器 EXE（点击后自动 Edge 打开）
+- `build_edge_exe.py`  
+  打包 Edge 启动器 EXE
 
-- 打开 `build_edge_exe.py`
-- 点击 IDE 运行按钮（绿色三角）
-- 打包完成后，生成文件在：`dist/PomodoroFocusEdge.exe`
-- 双击后会自动用 Edge 打开 `index.html`（本地服务地址）
+- `run_pomodoro.py`  
+  Tk 桌面版入口（历史版本保留）
 
-### 方式 B：Streamlit Web 版（可选）
+- `pomodoro_focus/app.py`  
+  Streamlit 版本入口（历史版本保留）
+
+---
+
+## 快速开始
+
+### 方式 1：直接打开 HTML
+
+双击打开 `index.html` 即可使用。  
+说明：数据默认保存到浏览器 `localStorage`。
+
+### 方式 2：打包桌面壳 EXE（推荐）
+
+运行 `build_web_exe.py`（IDE 点绿色三角即可）后，生成：
+
+- `dist/PomodoroFocusWeb.exe`
+
+### 方式 3：打包 Edge 启动器 EXE
+
+运行 `build_edge_exe.py` 后，生成：
+
+- `dist/PomodoroFocusEdge.exe`
+
+双击后自动启动本地服务并用 Edge 打开页面。
+
+---
+
+## 依赖安装
 
 ```bash
 pip install -r requirements.txt
-streamlit run pomodoro_focus/app.py
-```
-
-运行后浏览器会自动打开界面。
-
-## 数据存储
-
-- 本地 SQLite：`pomodoro_focus/pomodoro.db`
-- 不依赖云端，默认离线可用。
