@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 import socket
 import subprocess
 import sys
@@ -9,6 +10,8 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 import threading
 import time
+
+from plyer import notification
 
 
 PORT = 38765
@@ -20,9 +23,54 @@ def app_root() -> Path:
     return Path(__file__).resolve().parent
 
 
+def send_system_notification(title: str, message: str) -> tuple[bool, str]:
+    try:
+        notification.notify(
+            title=title,
+            message=message,
+            app_name="Pomodoro Focus",
+            timeout=6,
+        )
+        return True, ""
+    except Exception as exc:
+        return False, str(exc)
+
+
 class SilentHandler(SimpleHTTPRequestHandler):
     def log_message(self, _format: str, *_args) -> None:
         return
+
+    def _reply_json(self, status: int, payload: dict) -> None:
+        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def do_POST(self) -> None:
+        if self.path == "/api/request_notification":
+            ok, error = send_system_notification(
+                "番茄聚焦", "系统提醒已开启，后续将使用桌面通知提醒。"
+            )
+            self._reply_json(200 if ok else 500, {"ok": ok, "error": error})
+            return
+
+        if self.path == "/api/notify":
+            content_length = int(self.headers.get("Content-Length", "0"))
+            raw = self.rfile.read(content_length) if content_length > 0 else b"{}"
+            try:
+                payload = json.loads(raw.decode("utf-8"))
+            except Exception:
+                payload = {}
+
+            title = str(payload.get("title") or "番茄聚焦")
+            body = str(payload.get("body") or "提醒")
+            ok, error = send_system_notification(title, body)
+            self._reply_json(200 if ok else 500, {"ok": ok, "error": error})
+            return
+
+        self._reply_json(404, {"ok": False, "error": "not found"})
 
 
 def port_open(port: int) -> bool:

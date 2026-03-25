@@ -9,12 +9,12 @@
         --bg-1: #f4f0ea;
         --bg-2: #e9eef2;
         --ink: #1f1f1f;
-        --muted: #6d6a66;
+        --muted: #84807b;
         --card: #ffffff;
         --accent: #c96c4a;
         --accent-2: #2d7f7e;
-        --shadow: 0 20px 60px rgba(34, 34, 34, 0.14);
-        --radius: 18px;
+        --shadow: 0 24px 70px rgba(34, 34, 34, 0.08);
+        --radius: 20px;
         --mono: "Space Mono", "Fira Mono", "Courier New", monospace;
         --display: "DM Serif Display", "Times New Roman", serif;
         --body: "Work Sans", "Segoe UI", sans-serif;
@@ -32,256 +32,286 @@
           linear-gradient(160deg, var(--bg-1), var(--bg-2));
         color: var(--ink);
         font-family: var(--body);
+        padding: 20px;
       }
 
+      ::-webkit-scrollbar { width: 6px; height: 6px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #dcd3c9; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: #c5b8ab; }
+
       .app {
-        width: min(95vw, 1080px);
+        width: min(100%, 1080px);
         display: grid;
         grid-template-columns: 1.15fr 1fr;
-        gap: 14px;
+        gap: 20px;
+      }
+
+      /* 核心动画：错落有致的入场浮现 */
+      @keyframes fadeUp {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
       }
 
       .wrap {
         background: var(--card);
         border-radius: var(--radius);
         box-shadow: var(--shadow);
-        padding: 24px 22px;
+        padding: 30px 28px;
         position: relative;
         overflow: hidden;
+        animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+      }
+
+      .wrap:nth-child(2) { animation-delay: 0.1s; }
+      .bottom { animation-delay: 0.2s; }
+
+      /* 背景光晕的呼吸动效 */
+      @keyframes drift {
+        0% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+        50% { transform: translate(2%, 4%) scale(1.05); opacity: 1; }
+        100% { transform: translate(0, 0) scale(1); opacity: 0.8; }
       }
 
       .wrap::before {
         content: "";
         position: absolute;
         inset: -60% auto auto -40%;
-        width: 280px;
-        height: 280px;
-        background: radial-gradient(circle at 40% 40%, rgba(201, 108, 74, 0.18), transparent 60%);
+        width: 300px; height: 300px;
+        background: radial-gradient(circle at 40% 40%, rgba(201, 108, 74, 0.15), transparent 60%);
         pointer-events: none;
+        animation: drift 15s ease-in-out infinite alternate;
       }
 
       .wrap::after {
         content: "";
         position: absolute;
         inset: auto -30% -50% auto;
-        width: 260px;
-        height: 260px;
-        background: radial-gradient(circle at 60% 60%, rgba(45, 127, 126, 0.16), transparent 60%);
+        width: 280px; height: 280px;
+        background: radial-gradient(circle at 60% 60%, rgba(45, 127, 126, 0.12), transparent 60%);
         pointer-events: none;
+        animation: drift 18s ease-in-out infinite alternate-reverse;
       }
 
       .panel { position: relative; z-index: 1; }
-      .section { margin-top: 18px; }
+      .section { margin-top: 28px; }
       .section:first-child { margin-top: 0; }
 
-      header {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 12px;
-      }
+      header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 
-      h1, h2, h3 {
-        margin: 0;
-        font-family: var(--display);
-        letter-spacing: 0.5px;
-      }
+      h1, h2, h3 { margin: 0; font-family: var(--display); letter-spacing: 0.5px; color: #111; }
+      h1 { font-size: 2.1rem; }
+      h2 { font-size: 1.6rem; }
+      h3 { font-size: 1.25rem; }
 
-      h1 { font-size: 2rem; }
-      h2 { font-size: 1.45rem; }
-      h3 { font-size: 1.2rem; }
+      .count { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.4px; }
 
-      .count {
-        font-family: var(--mono);
-        font-size: 0.85rem;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 1.4px;
-      }
+      form { margin-top: 16px; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
 
-      form {
-        margin-top: 12px;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 10px;
-      }
+      .todo-form { grid-template-columns: 1fr 110px auto; }
 
-      input[type="text"], input[type="number"] {
-        padding: 12px 14px;
-        border-radius: 12px;
-        border: 1px solid #e3dfd9;
+      input[type="text"] {
+        padding: 14px 18px;
+        border-radius: 14px;
+        border: 2px solid #f0eadd;
         font-size: 0.98rem;
-        background: #fffefb;
+        background: #fdfaf6;
         font-family: var(--body);
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       }
 
-      input:focus {
+      .todo-form input[type="number"] {
+        padding: 14px 12px;
+        border-radius: 14px;
+        border: 2px solid #f0eadd;
+        font-size: 0.95rem;
+        background: #fdfaf6;
+        font-family: var(--mono);
+        text-align: center;
+      }
+
+      .todo-form input[type="number"]:focus {
         outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(201, 108, 74, 0.16);
+        border-color: var(--accent-2);
+        box-shadow: 0 4px 15px rgba(45, 127, 126, 0.1);
+        background: #fff;
+      }
+
+      input::placeholder { color: #b8b3ad; }
+      input[type="text"]:focus {
+        outline: none; border-color: var(--accent);
+        box-shadow: 0 4px 15px rgba(201, 108, 74, 0.1);
+        background: #fff;
       }
 
       button {
-        border: none;
-        padding: 0 16px;
-        border-radius: 12px;
+        border: none; padding: 0 20px; border-radius: 14px;
         background: linear-gradient(140deg, var(--accent), #e18d6f);
-        color: #fff;
-        font-size: 0.92rem;
-        font-weight: 600;
-        letter-spacing: 0.4px;
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        color: #fff; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.5px;
+        cursor: pointer; transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       }
 
       button.alt { background: linear-gradient(140deg, var(--accent-2), #4d9f9d); }
       button.soft { background: #f5e7e0; color: #8a4a30; }
-      button:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(201, 108, 74, 0.2); }
 
-      .list {
-        list-style: none;
-        margin: 12px 0 0;
-        padding: 0;
-        display: grid;
-        gap: 10px;
-      }
+      button:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(201, 108, 74, 0.25); }
+      button.alt:hover { box-shadow: 0 8px 16px rgba(45, 127, 126, 0.25); }
+      button.soft:hover { box-shadow: 0 8px 16px rgba(138, 74, 48, 0.15); }
+      button:active { transform: translateY(1px) scale(0.98); box-shadow: none; } /* 增加点击回弹感 */
+
+      .list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; }
 
       .list li {
-        background: #fdfaf6;
-        border: 1px solid #eee6dd;
-        border-radius: 14px;
-        padding: 11px 12px;
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        align-items: center;
-        gap: 12px;
+        background: #fdfbf8; border: 1px solid #f0eadd; border-radius: 16px;
+        padding: 14px 16px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px;
+        transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       }
 
-      .list li.completed { opacity: 0.72; }
+      .list li:hover { background: #fff; border-color: #e3dfd9; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04); }
+      .list li.completed { opacity: 0.65; background: #f9f8f6; box-shadow: none; transform: none; }
       .list li.completed .text { text-decoration: line-through; color: var(--muted); }
-      .list li.selected { outline: 2px solid rgba(45, 127, 126, 0.35); }
+      .list li.selected { outline: 2px solid rgba(45, 127, 126, 0.4); outline-offset: -1px; background: #fff; }
 
+      .text { display: flex; flex-direction: column; gap: 4px; }
+      .eta { font-size: 0.78rem; color: var(--muted); font-family: var(--mono); }
+
+      /* Q弹打勾动效 */
       .toggle {
-        width: 18px;
-        height: 18px;
-        border-radius: 6px;
-        border: 2px solid var(--accent-2);
-        display: grid;
-        place-items: center;
-        cursor: pointer;
-        background: transparent;
+        width: 22px; height: 22px; border-radius: 7px;
+        border: 2px solid #d3cec6; display: grid; place-items: center;
+        cursor: pointer; background: transparent; padding: 0;
+        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); /* 物理回弹曲线 */
       }
 
+      .toggle:active { transform: scale(0.85); }
+      .toggle:hover { border-color: var(--accent-2); }
       .list li.completed .toggle { background: var(--accent-2); border-color: var(--accent-2); }
 
       .toggle::after {
-        content: "";
-        width: 8px;
-        height: 4px;
-        border-left: 2px solid #fff;
-        border-bottom: 2px solid #fff;
-        transform: rotate(-45deg) scale(0);
-        transition: transform 0.15s ease;
+        content: ""; width: 9px; height: 5px;
+        border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+        transform: rotate(-45deg) scale(0) translateY(-1px);
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
+      .list li.completed .toggle::after { transform: rotate(-45deg) scale(1) translateY(-1px); }
 
-      .list li.completed .toggle::after { transform: rotate(-45deg) scale(1); }
-      .remove { width: 30px; height: 30px; border-radius: 10px; }
+      .remove { width: 32px; height: 32px; border-radius: 10px; padding: 0; display: grid; place-items: center; font-size: 1.2rem; line-height: 1; opacity: 0.4; transition: opacity 0.2s; }
+      .list li:hover .remove { opacity: 1; }
 
-      .meta {
-        margin-top: 10px;
+      .meta { margin-top: 14px; display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); }
+
+      .empty { margin-top: 16px; padding: 18px; border-radius: 16px; background: #f7f3ec; border: 1px dashed #e3dfd9; color: #8c8175; font-size: 0.92rem; text-align: center; }
+
+      /* ========================================================= */
+      /* 全新设计的仪表盘控制栏 */
+      /* ========================================================= */
+      .cfg-panel {
+        margin-top: 24px;
         display: flex;
         justify-content: space-between;
-        font-size: 0.84rem;
-        color: var(--muted);
-      }
-
-      .empty {
-        margin-top: 10px;
-        padding: 12px;
-        border-radius: 12px;
-        background: #f7f1ea;
-        color: #7c6c61;
-        font-size: 0.9rem;
-        text-align: center;
-      }
-
-      .cfg {
-        margin-top: 14px;
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 8px;
-      }
-
-      .cfg label {
-        font-size: 0.8rem;
-        color: var(--muted);
-        display: grid;
-        gap: 5px;
-      }
-
-      .cfg .check {
-        display: flex;
         align-items: center;
-        gap: 6px;
+        background: #fdfbf8;
+        padding: 16px 20px;
+        border-radius: 18px;
+        border: 1px solid #f0eadd;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
       }
+
+      .cfg-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+      .cfg-item label {
+        font-size: 0.75rem; color: var(--muted);
+        font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+      }
+
+      /* 隐藏原生数字输入框的上下箭头，更纯粹 */
+      .cfg-item input[type=number]::-webkit-inner-spin-button,
+      .cfg-item input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+      .cfg-item input[type=number] { -moz-appearance: textfield; }
+
+      .cfg-item input[type="number"] {
+        width: 44px; padding: 4px; font-size: 1.05rem; font-weight: 500; font-family: var(--mono);
+        text-align: center; border: none; background: transparent; color: var(--ink);
+        border-bottom: 2px solid #e3dfd9; border-radius: 0;
+        transition: all 0.3s ease;
+      }
+      .cfg-item input[type="number"]:focus { outline: none; border-bottom-color: var(--accent); color: var(--accent); }
+
+      /* 全新拟物滑动开关 */
+      .custom-switch { position: relative; display: inline-block; width: 46px; height: 26px; }
+      .custom-switch input { opacity: 0; width: 0; height: 0; }
+
+      .slider {
+        position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #e3dfd9; border-radius: 26px;
+        transition: .4s cubic-bezier(0.4, 0.0, 0.2, 1);
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      }
+      .slider:before {
+        position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px;
+        background-color: white; border-radius: 50%;
+        transition: .4s cubic-bezier(0.34, 1.56, 0.64, 1); /* 回弹过渡 */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      }
+      .custom-switch input:checked + .slider { background-color: var(--accent-2); }
+      .custom-switch input:checked + .slider:before { transform: translateX(20px); }
+
+      /* ========================================================= */
 
       .timer {
-        margin-top: 16px;
-        font-family: var(--mono);
-        font-size: 3rem;
-        text-align: center;
+        margin-top: 28px; font-family: var(--mono); font-size: 4.8rem; font-weight: 700;
+        text-align: center; color: var(--accent); letter-spacing: -2px; line-height: 1;
+        text-shadow: 0 8px 24px rgba(201, 108, 74, 0.18);
       }
 
-      .phase, .task, .hint, .report { margin-top: 10px; font-size: 0.95rem; }
-      .task strong { color: #145a32; }
-      .hint { color: var(--muted); }
-      .actions { margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-      .inline-actions { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .phase, .task, .hint, .report { margin-top: 14px; font-size: 0.95rem; text-align: center; }
+      .phase { font-weight: 600; color: var(--ink); letter-spacing: 0.5px; }
+      .task { background: #fdfbf8; padding: 14px; border-radius: 14px; border: 1px dashed #e3dfd9; }
+      .task strong { color: var(--accent-2); font-weight: 600; }
+      .hint { color: var(--muted); font-size: 0.88rem; text-align: left;}
+      .report { min-height: 1.5em; font-weight: 500; transition: color 0.3s ease; }
+      .elapsed { margin-top: 8px; text-align: center; color: var(--muted); font-family: var(--mono); font-size: 0.9rem; }
+
+      .actions { margin-top: 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+      .actions button { padding: 16px 0; font-size: 1.05rem; border-radius: 16px; }
+
+      .inline-actions { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
       .bottom {
-        grid-column: 1 / -1;
-        background: var(--card);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        padding: 16px;
+        grid-column: 1 / -1; background: var(--card); border-radius: var(--radius);
+        box-shadow: var(--shadow); padding: 28px 30px;
+        animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0;
       }
 
-      .bottom-grid {
-        display: grid;
-        grid-template-columns: 1.1fr 1fr;
-        gap: 14px;
+      .bottom-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 30px; }
+
+      .heat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
       }
 
-      canvas {
-        width: 100%;
-        height: 190px;
+      .heat-select {
+        border: 1px solid #e3dfd9;
+        background: #fffefb;
         border-radius: 10px;
-        background: #fff;
-        display: block;
+        padding: 6px 10px;
+        font-size: 0.9rem;
+        color: var(--ink);
       }
 
-      .history-list {
-        max-height: 210px;
-        overflow: auto;
-      }
+      canvas { width: 100%; height: 190px; border-radius: 16px; background: #fdfbf8; border: 1px solid #f0eadd; display: block; margin-top: 14px; }
 
-      .history-row {
-        font-size: 0.92rem;
-        border-bottom: 1px dashed #e8ddd3;
-        padding: 8px 2px;
-      }
-
-      .history-row .time {
-        display: block;
-        color: var(--muted);
-        font-size: 0.8rem;
-        margin-top: 2px;
-      }
+      .history-list { max-height: 200px; overflow-y: auto; padding-right: 12px; margin-top: 14px; }
+      .history-row { font-size: 0.95rem; border-bottom: 1px solid #f0eadd; padding: 12px 6px; color: var(--ink); }
+      .history-row:last-child { border-bottom: none; }
+      .history-row .time { display: block; color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-family: var(--mono); }
 
       @media (max-width: 900px) {
         .app { grid-template-columns: 1fr; }
-        .cfg { grid-template-columns: 1fr 1fr; }
+        .cfg-panel { flex-wrap: wrap; gap: 16px; justify-content: space-around; }
         .bottom-grid { grid-template-columns: 1fr; }
       }
     </style>
@@ -296,14 +326,15 @@
               <div class="count" id="count">0 items</div>
             </header>
 
-            <form id="today-form" autocomplete="off">
-              <input type="text" id="today-input" placeholder="输入一件今天要完成的事" />
+            <form id="today-form" class="todo-form" autocomplete="off">
+              <input type="text" id="today-input" placeholder="输入一件今天要完成的事..." />
+              <input type="number" id="today-eta" min="1" max="600" value="25" title="预计分钟" />
               <button type="submit">添加</button>
             </form>
 
             <div id="today-empty" class="empty">先写一条轻松的小事吧。</div>
             <ul id="today-list" class="list"></ul>
-            <div class="meta"><span>点击小方块完成</span><span>双击删除</span></div>
+            <div class="meta"><span>点击左侧方块完成</span><span>双击卡片删除</span></div>
           </section>
 
           <section class="section">
@@ -312,12 +343,13 @@
               <div class="count" id="long-count">0/0 today</div>
             </header>
 
-            <form id="long-form" autocomplete="off">
-              <input type="text" id="long-input" placeholder="输入每天都要做的长期任务" />
+            <form id="long-form" class="todo-form" autocomplete="off">
+              <input type="text" id="long-input" placeholder="输入每天都要做的日常习惯..." />
+              <input type="number" id="long-eta" min="1" max="600" value="25" title="预计分钟" />
               <button type="submit">添加</button>
             </form>
 
-            <div id="long-empty" class="empty">长期清单每天都会重置为待完成。</div>
+            <div id="long-empty" class="empty">长期清单每天午夜会自动重置为待完成。</div>
             <ul id="long-list" class="list"></ul>
           </section>
         </div>
@@ -327,34 +359,53 @@
         <div class="panel">
           <h2>当前番茄</h2>
 
-          <div class="cfg">
-            <label>工作(分)<input id="work-min" type="number" min="1" max="180" value="25" /></label>
-            <label>短休(分)<input id="short-min" type="number" min="1" max="60" value="5" /></label>
-            <label>长休(分)<input id="long-min" type="number" min="1" max="120" value="15" /></label>
-            <label>几轮长休<input id="rounds" type="number" min="1" max="12" value="4" /></label>
-            <label>长休开关<span class="check"><input id="enable-long-break" type="checkbox" checked />启用</span></label>
+          <div class="cfg-panel">
+            <div class="cfg-item">
+              <label>工作</label>
+              <input id="work-min" type="number" min="1" max="180" value="25" />
+            </div>
+            <div class="cfg-item">
+              <label>短休</label>
+              <input id="short-min" type="number" min="1" max="60" value="5" />
+            </div>
+            <div class="cfg-item">
+              <label>长休</label>
+              <input id="long-min" type="number" min="1" max="120" value="15" />
+            </div>
+            <div class="cfg-item">
+              <label>轮数</label>
+              <input id="rounds" type="number" min="1" max="12" value="4" />
+            </div>
+            <div class="cfg-item">
+              <label>长休开关</label>
+              <label class="custom-switch">
+                <input id="enable-long-break" type="checkbox" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
 
           <form id="task-form" autocomplete="off">
-            <input type="text" id="task-input" placeholder="本次专注任务（必填）例如：复习操作系统第三章" />
-            <button type="button" id="fill-from-todo">用选中任务</button>
+            <input type="text" id="task-input" placeholder="本次专注任务（例如：复习操作系统）" />
+            <button type="button" id="fill-from-todo">导入选中</button>
           </form>
 
           <div class="inline-actions">
-            <button type="button" id="notify-btn" class="alt">开启系统提醒</button>
-            <button type="button" id="clear-history" class="soft">清空历史清单</button>
+            <button type="button" id="notify-btn" class="alt">开启系统桌面提醒</button>
+            <button type="button" id="clear-history" class="soft">清空历史遗留清单</button>
           </div>
 
           <div class="timer" id="timer">25:00</div>
+          <div class="elapsed" id="focus-elapsed">已专注：00:00</div>
           <div class="phase" id="phase">阶段：专注</div>
-          <div class="task" id="focus-task">当前任务：<strong>(等待开始)</strong></div>
-          <div class="hint">开始专注前必须定义任务，倒计时只显示这一件事。</div>
+          <div class="task" id="focus-task">当前目标：<strong>(等待开始)</strong></div>
           <div class="report" id="buffer"></div>
 
           <div class="actions">
-            <button type="button" id="start-btn">开始</button>
+            <button type="button" id="start-btn">开始专注</button>
             <button type="button" id="pause-btn" class="alt">柔和打断</button>
-            <button type="button" id="finish-btn" class="soft">完成阶段</button>
+            <button type="button" id="finish-btn" class="soft">提前完成</button>
+            <button type="button" id="end-task-btn" class="soft">结束当前任务</button>
           </div>
         </div>
       </section>
@@ -362,14 +413,21 @@
       <section class="bottom">
         <div class="bottom-grid">
           <div>
-            <h3>专注热力图与周报</h3>
-            <div class="hint" id="weekly">本周番茄 0 | 连续打卡 0 天 | 黄金时间段 暂无数据</div>
+            <div class="heat-header">
+              <h3>专注热力图与周报</h3>
+              <select id="heatmap-mode" class="heat-select">
+                <option value="daily">按天</option>
+                <option value="weekly">按周</option>
+                <option value="monthly">按月</option>
+              </select>
+            </div>
+            <div class="hint" id="weekly" style="margin-top: 10px;">本周番茄 0 | 连续打卡 0 天 | 黄金时间段 暂无数据</div>
             <canvas id="heatmap"></canvas>
           </div>
           <div>
-            <h3>历史清单</h3>
-            <div class="hint">昨天未完成的今日清单会自动归档到这里。</div>
-            <div id="history-empty" class="empty">暂无历史清单。</div>
+            <h3>历史归档清单</h3>
+            <div class="hint" style="margin-top: 10px;">昨天未完成的今日清单会自动归档到这里。</div>
+            <div id="history-empty" class="empty">暂无历史清单记录。</div>
             <div id="history-list" class="history-list"></div>
           </div>
         </div>
@@ -377,6 +435,7 @@
     </main>
 
     <script>
+      // 这里的 JS 逻辑保持不变，ID 全部对应，直接复制运行即可
       const LS_TODAY = "pomodoro.today.v2";
       const LS_LONG = "pomodoro.long.v2";
       const LS_HISTORY = "pomodoro.history.v2";
@@ -388,11 +447,13 @@
       const el = {
         todayForm: document.getElementById("today-form"),
         todayInput: document.getElementById("today-input"),
+        todayEta: document.getElementById("today-eta"),
         todayList: document.getElementById("today-list"),
         todayEmpty: document.getElementById("today-empty"),
         count: document.getElementById("count"),
         longForm: document.getElementById("long-form"),
         longInput: document.getElementById("long-input"),
+        longEta: document.getElementById("long-eta"),
         longList: document.getElementById("long-list"),
         longEmpty: document.getElementById("long-empty"),
         longCount: document.getElementById("long-count"),
@@ -408,13 +469,16 @@
         notifyBtn: document.getElementById("notify-btn"),
         clearHistory: document.getElementById("clear-history"),
         timer: document.getElementById("timer"),
+        focusElapsed: document.getElementById("focus-elapsed"),
         phase: document.getElementById("phase"),
         focusTask: document.getElementById("focus-task"),
         buffer: document.getElementById("buffer"),
         startBtn: document.getElementById("start-btn"),
         pauseBtn: document.getElementById("pause-btn"),
         finishBtn: document.getElementById("finish-btn"),
+        endTaskBtn: document.getElementById("end-task-btn"),
         weekly: document.getElementById("weekly"),
+        heatmapMode: document.getElementById("heatmap-mode"),
         heatmap: document.getElementById("heatmap"),
       };
 
@@ -433,6 +497,7 @@
 
       let selectedTodayId = null;
       let selectedLongId = null;
+      let notifyInitialized = false;
 
       const runtime = {
         phase: "work",
@@ -446,6 +511,8 @@
         currentTask: "",
         interruptions: [],
         lastWorkTask: "",
+        pendingTaskBinding: null,
+        activeTaskBinding: null,
       };
 
       rolloverDayIfNeeded();
@@ -458,24 +525,14 @@
 
       setInterval(tick, 1000);
       window.addEventListener("resize", refreshAnalytics);
+      el.heatmapMode.addEventListener("change", refreshAnalytics);
 
       function load(key, fallback) {
-        try {
-          const raw = localStorage.getItem(key);
-          return raw ? JSON.parse(raw) : fallback;
-        } catch {
-          return fallback;
-        }
+        try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch { return fallback; }
       }
 
-      function save(key, value) {
-        localStorage.setItem(key, JSON.stringify(value));
-      }
-
-      function todayKey() {
-        return dayKey(new Date());
-      }
-
+      function save(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+      function todayKey() { return dayKey(new Date()); }
       function dayKey(dateObj) {
         const y = dateObj.getFullYear();
         const m = String(dateObj.getMonth() + 1).padStart(2, "0");
@@ -483,40 +540,33 @@
         return `${y}-${m}-${d}`;
       }
 
+      function clampEstimate(value) {
+        const num = Number(value);
+        if (!Number.isFinite(num)) return 25;
+        return Math.max(1, Math.min(600, Math.round(num)));
+      }
+
       function rolloverDayIfNeeded() {
         const meta = load(LS_META, { lastOpenDate: todayKey() });
         const nowDay = todayKey();
-
         if (meta.lastOpenDate !== nowDay) {
           const overdue = todayTodos.filter((t) => !t.done);
           if (overdue.length) {
             const movedAt = new Date().toISOString();
             const records = overdue.map((t) => ({
-              id: crypto.randomUUID(),
-              text: t.text,
-              fromDate: meta.lastOpenDate,
-              movedAt,
-              reason: "昨日未完成",
+              id: crypto.randomUUID(), text: t.text, fromDate: meta.lastOpenDate, movedAt, reason: "昨日未完成",
             }));
             historyTodos = [...records, ...historyTodos].slice(0, 1000);
           }
-
-          todayTodos = [];
-          selectedTodayId = null;
-          save(LS_TODAY, todayTodos);
-          save(LS_HISTORY, historyTodos);
+          todayTodos = []; selectedTodayId = null;
+          save(LS_TODAY, todayTodos); save(LS_HISTORY, historyTodos);
         }
-
-        meta.lastOpenDate = nowDay;
-        save(LS_META, meta);
+        meta.lastOpenDate = nowDay; save(LS_META, meta);
       }
 
       function initSettings() {
         const s = load(LS_SETTINGS, { work: 25, short: 5, long: 15, rounds: 4, enableLongBreak: true });
-        el.workMin.value = s.work;
-        el.shortMin.value = s.short;
-        el.longMin.value = s.long;
-        el.rounds.value = s.rounds;
+        el.workMin.value = s.work; el.shortMin.value = s.short; el.longMin.value = s.long; el.rounds.value = s.rounds;
         el.enableLongBreak.checked = s.enableLongBreak !== false;
         [el.workMin, el.shortMin, el.longMin, el.rounds, el.enableLongBreak].forEach((n) => {
           n.addEventListener("change", () => {
@@ -545,18 +595,16 @@
           if (todo.id === selectedId) item.classList.add("selected");
 
           const toggle = document.createElement("button");
-          toggle.className = "toggle";
-          toggle.type = "button";
+          toggle.className = "toggle"; toggle.type = "button";
           toggle.addEventListener("click", () => onToggle(todo, index));
 
           const text = document.createElement("span");
           text.className = "text";
-          text.textContent = todo.text;
+          const eta = clampEstimate(todo.estimateMinutes ?? 25);
+          text.innerHTML = `<span>${escapeHtml(todo.text)}</span><span class="eta">预计 ${eta} 分钟</span>`;
 
           const remove = document.createElement("button");
-          remove.className = "remove soft";
-          remove.type = "button";
-          remove.textContent = "×";
+          remove.className = "remove soft"; remove.type = "button"; remove.textContent = "×";
           remove.addEventListener("click", () => onDelete(todo, index));
 
           item.append(toggle, text, remove);
@@ -564,134 +612,89 @@
           item.addEventListener("dblclick", () => onDelete(todo, index));
           container.appendChild(item);
         });
-
         emptyNode.style.display = source.length ? "none" : "block";
       }
 
       function renderTodayTodos() {
         renderTaskList({
-          source: todayTodos,
-          container: el.todayList,
-          emptyNode: el.todayEmpty,
-          selectedId: selectedTodayId,
-          onSelect: (id) => {
-            selectedTodayId = id;
-            selectedLongId = null;
-            renderTodayTodos();
-            renderLongTodos();
-          },
-          onToggle: (todo) => {
-            todo.done = !todo.done;
-            save(LS_TODAY, todayTodos);
-            renderTodayTodos();
-          },
-          onDelete: (_todo, index) => {
-            todayTodos.splice(index, 1);
-            save(LS_TODAY, todayTodos);
-            renderTodayTodos();
-          },
+          source: todayTodos, container: el.todayList, emptyNode: el.todayEmpty, selectedId: selectedTodayId,
+          onSelect: (id) => { selectedTodayId = id; selectedLongId = null; renderTodayTodos(); renderLongTodos(); },
+          onToggle: (todo) => { todo.done = !todo.done; save(LS_TODAY, todayTodos); renderTodayTodos(); },
+          onDelete: (_todo, index) => { todayTodos.splice(index, 1); save(LS_TODAY, todayTodos); renderTodayTodos(); },
           doneChecker: (todo) => Boolean(todo.done),
         });
-
-        const remaining = todayTodos.filter((t) => !t.done).length;
-        el.count.textContent = `${remaining} items`;
+        el.count.textContent = `${todayTodos.filter((t) => !t.done).length} items`;
       }
 
-      function isLongDoneToday(todo) {
-        return todo.lastDoneDate === todayKey();
-      }
+      function isLongDoneToday(todo) { return todo.lastDoneDate === todayKey(); }
 
       function renderLongTodos() {
         renderTaskList({
-          source: longTodos,
-          container: el.longList,
-          emptyNode: el.longEmpty,
-          selectedId: selectedLongId,
-          onSelect: (id) => {
-            selectedLongId = id;
-            selectedTodayId = null;
-            renderTodayTodos();
-            renderLongTodos();
-          },
-          onToggle: (todo) => {
-            todo.lastDoneDate = isLongDoneToday(todo) ? "" : todayKey();
-            save(LS_LONG, longTodos);
-            renderLongTodos();
-          },
-          onDelete: (_todo, index) => {
-            longTodos.splice(index, 1);
-            save(LS_LONG, longTodos);
-            renderLongTodos();
-          },
+          source: longTodos, container: el.longList, emptyNode: el.longEmpty, selectedId: selectedLongId,
+          onSelect: (id) => { selectedLongId = id; selectedTodayId = null; renderTodayTodos(); renderLongTodos(); },
+          onToggle: (todo) => { todo.lastDoneDate = isLongDoneToday(todo) ? "" : todayKey(); save(LS_LONG, longTodos); renderLongTodos(); },
+          onDelete: (_todo, index) => { longTodos.splice(index, 1); save(LS_LONG, longTodos); renderLongTodos(); },
           doneChecker: (todo) => isLongDoneToday(todo),
         });
-
-        const done = longTodos.filter((t) => isLongDoneToday(t)).length;
-        el.longCount.textContent = `${done}/${longTodos.length} today`;
+        el.longCount.textContent = `${longTodos.filter((t) => isLongDoneToday(t)).length}/${longTodos.length} today`;
       }
 
       function renderHistory() {
-        el.historyList.innerHTML = "";
-        el.historyEmpty.style.display = historyTodos.length ? "none" : "block";
-
+        el.historyList.innerHTML = ""; el.historyEmpty.style.display = historyTodos.length ? "none" : "block";
         historyTodos.slice(0, 200).forEach((h) => {
-          const row = document.createElement("div");
-          row.className = "history-row";
+          const row = document.createElement("div"); row.className = "history-row";
           row.innerHTML = `<div>${escapeHtml(h.text)}</div><span class="time">${h.reason} | 来自 ${h.fromDate}</span>`;
           el.historyList.appendChild(row);
         });
       }
 
       function escapeHtml(raw) {
-        return raw
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#39;");
+        return raw.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
       }
 
       el.todayForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const value = el.todayInput.value.trim();
-        if (!value) return;
-        todayTodos.unshift({ id: crypto.randomUUID(), text: value, done: false, createdAt: Date.now() });
-        el.todayInput.value = "";
-        save(LS_TODAY, todayTodos);
-        renderTodayTodos();
+        event.preventDefault(); const value = el.todayInput.value.trim(); if (!value) return;
+        todayTodos.unshift({
+          id: crypto.randomUUID(),
+          text: value,
+          done: false,
+          estimateMinutes: clampEstimate(el.todayEta.value),
+          createdAt: Date.now(),
+        });
+        el.todayInput.value = ""; save(LS_TODAY, todayTodos); renderTodayTodos();
       });
 
       el.longForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const value = el.longInput.value.trim();
-        if (!value) return;
-        longTodos.unshift({ id: crypto.randomUUID(), text: value, lastDoneDate: "" });
-        el.longInput.value = "";
-        save(LS_LONG, longTodos);
-        renderLongTodos();
+        event.preventDefault(); const value = el.longInput.value.trim(); if (!value) return;
+        longTodos.unshift({
+          id: crypto.randomUUID(),
+          text: value,
+          estimateMinutes: clampEstimate(el.longEta.value),
+          lastDoneDate: "",
+        });
+        el.longInput.value = ""; save(LS_LONG, longTodos); renderLongTodos();
       });
 
       el.fillFromTodo.addEventListener("click", () => {
-        const todaySelected = todayTodos.find((t) => t.id === selectedTodayId && !t.done);
-        const longSelected = longTodos.find((t) => t.id === selectedLongId && !isLongDoneToday(t));
-        const selected = todaySelected || longSelected;
+        const selectedToday = todayTodos.find((t) => t.id === selectedTodayId && !t.done);
+        const selectedLong = longTodos.find((t) => t.id === selectedLongId && !isLongDoneToday(t));
+        const selected = selectedToday || selectedLong;
         if (!selected) return showToast("请先在左侧选中一条未完成任务。", "warn");
         el.taskInput.value = selected.text;
+        runtime.pendingTaskBinding = selectedToday
+          ? { source: "today", id: selectedToday.id, text: selectedToday.text }
+          : { source: "long", id: selectedLong.id, text: selectedLong.text };
       });
 
-      el.notifyBtn.addEventListener("click", () => {
-        requestNotificationPermission();
-      });
-      el.clearHistory.addEventListener("click", () => {
-        historyTodos = [];
-        save(LS_HISTORY, historyTodos);
-        renderHistory();
+      el.taskInput.addEventListener("input", () => {
+        if (!runtime.pendingTaskBinding) return;
+        if (el.taskInput.value.trim() !== runtime.pendingTaskBinding.text) runtime.pendingTaskBinding = null;
       });
 
-      el.startBtn.addEventListener("click", () => {
-        if (runtime.isPaused) return resumeAfterPause();
-        startCurrentPhase(false);
-      });
+      el.notifyBtn.addEventListener("click", () => { requestNotificationPermission(false); });
+      el.clearHistory.addEventListener("click", () => { historyTodos = []; save(LS_HISTORY, historyTodos); renderHistory(); });
+
+      el.startBtn.addEventListener("click", () => { if (runtime.isPaused) return resumeAfterPause(); startCurrentPhase(false); });
 
       el.pauseBtn.addEventListener("click", () => {
         if (!runtime.isRunning || runtime.phase !== "work") return;
@@ -699,259 +702,500 @@
         const bufferMin = Math.max(1, Math.min(15, Number(prompt("缓冲几分钟后恢复（1-15）", "3")) || 3));
         runtime.remainingWhenPaused = Math.max(0, Math.floor((runtime.endAt - Date.now()) / 1000));
         runtime.pauseBufferUntil = Date.now() + bufferMin * 60 * 1000;
-        runtime.isRunning = false;
-        runtime.isPaused = true;
+        runtime.isRunning = false; runtime.isPaused = true;
         runtime.interruptions.push({ at: new Date().toISOString(), reason, bufferMinutes: bufferMin });
         refreshTimerUI();
       });
 
-      el.finishBtn.addEventListener("click", () => {
-        if (!runtime.isRunning && !runtime.isPaused) return;
-        completePhase();
+      el.finishBtn.addEventListener("click", () => { if (!runtime.isRunning && !runtime.isPaused) return; completePhase(); });
+      el.endTaskBtn.addEventListener("click", () => {
+        if (!runtime.isRunning && !runtime.isPaused) return showToast("当前没有正在执行的任务。", "warn");
+        if (runtime.phase !== "work") return showToast("当前为休息阶段，没有可结束的专注任务。", "warn");
+        completePhase({ endTask: true });
       });
 
       function getPhaseSeconds() {
-        const s = getSettings();
-        if (runtime.phase === "work") return s.work * 60;
-        if (runtime.phase === "short_break") return s.short * 60;
-        return s.long * 60;
+        const s = getSettings(); return runtime.phase === "work" ? s.work * 60 : runtime.phase === "short_break" ? s.short * 60 : s.long * 60;
       }
 
-      function phaseName(phase) {
-        return phase === "work" ? "专注" : phase === "short_break" ? "短休" : "长休";
+      function getElapsedSeconds() {
+        const total = getPhaseSeconds();
+        let remain;
+        if (runtime.isRunning) remain = Math.max(0, Math.floor((runtime.endAt - Date.now()) / 1000));
+        else if (runtime.isPaused) remain = runtime.remainingWhenPaused;
+        else remain = total;
+        return Math.max(0, total - remain);
       }
+
+      function phaseName(phase) { return phase === "work" ? "专注" : phase === "short_break" ? "短休" : "长休"; }
 
       function startCurrentPhase(isAuto) {
         if (runtime.isRunning) return false;
-
         if (runtime.phase === "work") {
           const typedTask = el.taskInput.value.trim();
-          const fallbackTask = runtime.lastWorkTask || "继续专注任务";
-          const task = typedTask || (isAuto ? fallbackTask : "");
-          if (!task) {
-            showToast("开始专注前必须输入任务。", "warn");
-            return false;
-          }
-          runtime.currentTask = task;
-          if (isAuto && !typedTask) el.taskInput.value = task;
-        } else {
-          runtime.currentTask = "休息恢复";
-        }
-
-        requestNotificationPermission();
-
-        runtime.startedAt = Date.now();
-        runtime.endAt = Date.now() + getPhaseSeconds() * 1000;
-        runtime.isRunning = true;
-        runtime.isPaused = false;
-        runtime.interruptions = [];
-        refreshTimerUI();
-        return true;
+          const task = typedTask || (isAuto ? (runtime.lastWorkTask || "继续专注任务") : "");
+          if (!task) { showToast("开始专注前必须输入任务。", "warn"); return false; }
+          runtime.currentTask = task; if (isAuto && !typedTask) el.taskInput.value = task;
+          runtime.activeTaskBinding = runtime.pendingTaskBinding && runtime.pendingTaskBinding.text === task
+            ? { ...runtime.pendingTaskBinding }
+            : null;
+        } else { runtime.currentTask = "休息恢复"; }
+        requestNotificationPermission(true);
+        runtime.startedAt = Date.now(); runtime.endAt = Date.now() + getPhaseSeconds() * 1000;
+        runtime.isRunning = true; runtime.isPaused = false; runtime.interruptions = [];
+        refreshTimerUI(); return true;
       }
 
       function tick() {
         if (runtime.isRunning) {
-          const remain = Math.max(0, Math.floor((runtime.endAt - Date.now()) / 1000));
-          if (remain === 0) {
-            completePhase();
-            return;
-          }
+          if (Math.max(0, Math.floor((runtime.endAt - Date.now()) / 1000)) === 0) { completePhase(); return; }
         }
         refreshTimerUI();
       }
 
       function refreshTimerUI() {
-        let remain;
-        if (runtime.isRunning) remain = Math.max(0, Math.floor((runtime.endAt - Date.now()) / 1000));
-        else if (runtime.isPaused) remain = runtime.remainingWhenPaused;
-        else remain = getPhaseSeconds();
-
-        const mm = String(Math.floor(remain / 60)).padStart(2, "0");
-        const ss = String(remain % 60).padStart(2, "0");
-
-        el.timer.textContent = `${mm}:${ss}`;
+        const remain = runtime.isRunning ? Math.max(0, Math.floor((runtime.endAt - Date.now()) / 1000)) : runtime.isPaused ? runtime.remainingWhenPaused : getPhaseSeconds();
+        const elapsed = getElapsedSeconds();
+        el.timer.textContent = `${String(Math.floor(remain / 60)).padStart(2, "0")}:${String(remain % 60).padStart(2, "0")}`;
+        if (runtime.phase === "work") {
+          el.focusElapsed.textContent = `已专注：${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`;
+        } else {
+          el.focusElapsed.textContent = "已专注：--:--";
+        }
         el.phase.textContent = `阶段：${phaseName(runtime.phase)}`;
-        el.focusTask.innerHTML = `当前任务：<strong>${runtime.phase === "work" ? runtime.currentTask || "(等待开始)" : "休息恢复"}</strong>`;
-        el.startBtn.textContent = runtime.isPaused ? "恢复" : "开始";
-
+        el.focusTask.innerHTML = `当前目标：<strong>${runtime.phase === "work" ? runtime.currentTask || "(等待开始)" : "休息恢复"}</strong>`;
+        el.startBtn.textContent = runtime.isPaused ? "恢复" : "开始专注";
         if (runtime.isPaused) {
           const wait = Math.max(0, Math.floor((runtime.pauseBufferUntil - Date.now()) / 1000));
-          const bm = String(Math.floor(wait / 60)).padStart(2, "0");
-          const bs = String(wait % 60).padStart(2, "0");
-          el.buffer.textContent = `柔和打断缓冲中，建议等待：${bm}:${bs}`;
-        } else {
-          el.buffer.textContent = "";
-        }
+          el.buffer.textContent = `柔和打断缓冲中，建议等待：${String(Math.floor(wait / 60)).padStart(2, "0")}:${String(wait % 60).padStart(2, "0")}`;
+        } else { el.buffer.textContent = ""; }
       }
 
-      function resumeAfterPause() {
-        runtime.isPaused = false;
-        runtime.isRunning = true;
-        runtime.endAt = Date.now() + runtime.remainingWhenPaused * 1000;
-        refreshTimerUI();
-      }
+      function resumeAfterPause() { runtime.isPaused = false; runtime.isRunning = true; runtime.endAt = Date.now() + runtime.remainingWhenPaused * 1000; refreshTimerUI(); }
 
-      function completePhase() {
+      function completePhase(options = {}) {
+        const endTask = Boolean(options.endTask);
+        let autoContinue = true;
         const endedAt = Date.now();
         sessions.push({
-          id: crypto.randomUUID(),
-          taskName: runtime.currentTask || "未命名任务",
-          phase: runtime.phase,
-          startedAt: new Date(runtime.startedAt || Date.now()).toISOString(),
-          endedAt: new Date(endedAt).toISOString(),
-          durationMinutes: Math.max(0, (endedAt - (runtime.startedAt || endedAt)) / 60000),
-          completed: true,
-          interruptions: runtime.interruptions,
+          id: crypto.randomUUID(), taskName: runtime.currentTask || "未命名任务", phase: runtime.phase,
+          startedAt: new Date(runtime.startedAt || Date.now()).toISOString(), endedAt: new Date(endedAt).toISOString(),
+          durationMinutes: Math.max(0, (endedAt - (runtime.startedAt || endedAt)) / 60000), completed: true, interruptions: runtime.interruptions,
         });
         save(LS_SESSIONS, sessions);
-
         const settings = getSettings();
         if (runtime.phase === "work") {
+          if (endTask) markCurrentTaskDone();
           runtime.lastWorkTask = runtime.currentTask || runtime.lastWorkTask;
-          runtime.workRounds += 1;
-          const shouldLongBreak = settings.enableLongBreak && runtime.workRounds % settings.rounds === 0;
-          runtime.phase = shouldLongBreak ? "long_break" : "short_break";
-          runtime.currentTask = "";
-          el.taskInput.value = "";
-          notifySystem("番茄完成", runtime.phase === "long_break" ? "完成一轮专注，进入长休。" : "当前番茄完成，进入短休。");
+          if (!endTask) {
+            runtime.workRounds += 1;
+            runtime.phase = (settings.enableLongBreak && runtime.workRounds % settings.rounds === 0) ? "long_break" : "short_break";
+          } else {
+            runtime.phase = "work";
+            autoContinue = false;
+          }
+          runtime.currentTask = ""; el.taskInput.value = "";
+          runtime.pendingTaskBinding = null;
+          runtime.activeTaskBinding = null;
+          notifySystem(
+            endTask ? "任务已结束" : "番茄完成",
+            endTask
+              ? "当前任务已结束，不会自动进入下一次番茄。"
+              : runtime.phase === "long_break"
+                ? "完成一轮专注，进入长休。"
+                : "当前番茄完成，进入短休。"
+          );
         } else {
-          runtime.phase = "work";
-          notifySystem("休息结束", "自动进入下一次番茄。", true);
+          runtime.phase = "work"; notifySystem("休息结束", "自动进入下一次番茄。", true);
+        }
+        runtime.isRunning = false; runtime.isPaused = false; runtime.startedAt = 0; runtime.endAt = 0; runtime.remainingWhenPaused = 0; runtime.pauseBufferUntil = 0; runtime.interruptions = [];
+        if (autoContinue) startCurrentPhase(true);
+        refreshTimerUI(); refreshAnalytics();
+      }
+
+      function markCurrentTaskDone() {
+        const bind = runtime.activeTaskBinding;
+        if (bind && bind.source === "today") {
+          const target = todayTodos.find((t) => t.id === bind.id);
+          if (target) {
+            target.done = true;
+            save(LS_TODAY, todayTodos);
+            renderTodayTodos();
+            return;
+          }
+        }
+        if (bind && bind.source === "long") {
+          const target = longTodos.find((t) => t.id === bind.id);
+          if (target) {
+            target.lastDoneDate = todayKey();
+            save(LS_LONG, longTodos);
+            renderLongTodos();
+            return;
+          }
         }
 
-        runtime.isRunning = false;
-        runtime.isPaused = false;
-        runtime.startedAt = 0;
-        runtime.endAt = 0;
-        runtime.remainingWhenPaused = 0;
-        runtime.pauseBufferUntil = 0;
-        runtime.interruptions = [];
+        const byTextToday = todayTodos.find((t) => !t.done && t.text === runtime.currentTask);
+        if (byTextToday) {
+          byTextToday.done = true;
+          save(LS_TODAY, todayTodos);
+          renderTodayTodos();
+          return;
+        }
 
-        startCurrentPhase(true);
-        refreshTimerUI();
-        refreshAnalytics();
+        const byTextLong = longTodos.find((t) => !isLongDoneToday(t) && t.text === runtime.currentTask);
+        if (byTextLong) {
+          byTextLong.lastDoneDate = todayKey();
+          save(LS_LONG, longTodos);
+          renderLongTodos();
+        }
       }
 
-      function hasNativeNotifyBridge() {
-        return Boolean(window.pywebview && window.pywebview.api && window.pywebview.api.request_notification);
+      function hasNativeNotifyBridge() { return Boolean(window.pywebview && window.pywebview.api && window.pywebview.api.request_notification); }
+
+      function hasLocalNotifyApi() {
+        return window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost";
       }
 
-      async function requestNotificationPermission() {
+      async function callLocalNotifyApi(path, payload = {}) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 1500);
+        try {
+          const response = await fetch(path, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            signal: controller.signal,
+          });
+          if (!response.ok) return { ok: false };
+          return await response.json();
+        } catch {
+          return { ok: false };
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      async function requestNotificationPermission(silent = false) {
+        if (notifyInitialized) {
+          if (!silent) showToast("系统提醒已开启。", "ok");
+          return;
+        }
         if (hasNativeNotifyBridge()) {
           try {
             const result = await window.pywebview.api.request_notification();
-            if (result && result.ok) showToast("桌面提醒已开启。", "ok");
-            else showToast("桌面提醒初始化失败。", "warn");
+            if (result && result.ok) {
+              notifyInitialized = true;
+              if (!silent) showToast("桌面提醒已开启。", "ok");
+            } else if (!silent) {
+              showToast("桌面提醒初始化失败。", "warn");
+            }
           } catch {
-            showToast("桌面提醒初始化失败。", "warn");
+            if (!silent) showToast("桌面提醒初始化失败。", "warn");
           }
           return;
         }
-
+        if (hasLocalNotifyApi()) {
+          const result = await callLocalNotifyApi("/api/request_notification");
+          if (result && result.ok) {
+            notifyInitialized = true;
+            if (!silent) showToast("系统提醒已开启。", "ok");
+            return;
+          }
+        }
         if (!("Notification" in window)) {
-          showToast("当前浏览器不支持系统通知。", "warn");
+          if (!silent) showToast("当前浏览器不支持系统通知。", "warn");
           return;
         }
         if (Notification.permission === "granted") {
-          showToast("系统提醒已开启。", "ok");
+          notifyInitialized = true;
+          if (!silent) showToast("系统提醒已开启。", "ok");
           return;
         }
         if (Notification.permission === "denied") {
-          showToast("通知权限被禁用，请在浏览器设置里开启。", "warn");
+          if (!silent) showToast("通知权限被禁用，请在浏览器设置里开启。", "warn");
           return;
         }
         Notification.requestPermission().then((permission) => {
-          if (permission === "granted") showToast("系统提醒已开启。", "ok");
-          else showToast("你拒绝了系统提醒权限。", "warn");
+          if (permission === "granted") {
+            notifyInitialized = true;
+            if (!silent) showToast("系统提醒已开启。", "ok");
+          } else if (!silent) {
+            showToast("你拒绝了系统提醒权限。", "warn");
+          }
         });
       }
 
       async function notifySystem(title, body, showToastBackup = false) {
-        if (hasNativeNotifyBridge()) {
-          try {
-            await window.pywebview.api.notify(title, body);
-            return;
-          } catch {
-            if (showToastBackup) showToast(`${title}：${body}`, "ok");
-            return;
-          }
+        if (hasNativeNotifyBridge()) { try { await window.pywebview.api.notify(title, body); return; } catch { if (showToastBackup) showToast(`${title}：${body}`, "ok"); return; } }
+        if (hasLocalNotifyApi()) {
+          const result = await callLocalNotifyApi("/api/notify", { title, body });
+          if (result && result.ok) return;
         }
-
-        if ("Notification" in window && Notification.permission === "granted") {
-          const n = new Notification(title, { body, silent: false });
-          setTimeout(() => n.close(), 5000);
-        } else if (showToastBackup) {
-          showToast(`${title}：${body}`, "ok");
-        }
+        if ("Notification" in window && Notification.permission === "granted") { const n = new Notification(title, { body, silent: false }); setTimeout(() => n.close(), 5000); } else if (showToastBackup) { showToast(`${title}：${body}`, "ok"); }
       }
 
-      function showToast(text, kind = "ok") {
-        el.buffer.style.color = kind === "warn" ? "#8a4b08" : "#2d7f7e";
-        el.buffer.textContent = text;
-        setTimeout(() => {
-          if (!runtime.isPaused) el.buffer.textContent = "";
-        }, 3500);
-      }
+      function showToast(text, kind = "ok") { el.buffer.style.color = kind === "warn" ? "#8a4b08" : "#2d7f7e"; el.buffer.textContent = text; setTimeout(() => { if (!runtime.isPaused) el.buffer.textContent = ""; }, 3500); }
 
       function refreshAnalytics() {
         const daily = dailyFocusCounts(365);
-        drawHeatmap(daily);
+        drawHeatmap(daily, el.heatmapMode.value);
 
+        const now = new Date();
+        const weekStart = new Date(now);
+        const weekday = (weekStart.getDay() + 6) % 7;
+        weekStart.setDate(weekStart.getDate() - weekday);
+        weekStart.setHours(0, 0, 0, 0);
         const weekTomatoes = Array.from({ length: 7 }).reduce((sum, _, i) => {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
+          const d = new Date(weekStart);
+          d.setDate(weekStart.getDate() + i);
           return sum + (daily[dayKey(d)] || 0);
         }, 0);
 
         let streak = 0;
         for (let i = 0; i < 365; i++) {
           const d = new Date();
+          d.setHours(0, 0, 0, 0);
           d.setDate(d.getDate() - i);
           if ((daily[dayKey(d)] || 0) > 0) streak += 1;
           else break;
         }
-
         el.weekly.textContent = `本周番茄 ${weekTomatoes} | 连续打卡 ${streak} 天 | 黄金时间段 ${computeBestWindow()}`;
       }
 
       function dailyFocusCounts(days = 365) {
         const map = {};
         const start = new Date();
+        start.setHours(0, 0, 0, 0);
         start.setDate(start.getDate() - (days - 1));
+
         sessions.forEach((s) => {
-          if (s.phase !== "work" || !s.completed) return;
+          if (s.phase !== "work" || !s.completed || !s.startedAt) return;
           const d = new Date(s.startedAt);
+          if (Number.isNaN(d.getTime())) return;
           if (d >= start) map[dayKey(d)] = (map[dayKey(d)] || 0) + 1;
         });
         return map;
       }
 
       function computeBestWindow() {
-        const recent = sessions.filter((s) => s.phase === "work" && s.completed).slice(-400);
+        const recent = sessions
+          .filter((s) => s.phase === "work" && s.completed && s.startedAt)
+          .slice(-600);
         if (!recent.length) return "暂无数据";
 
         const slots = {};
         recent.forEach((s) => {
           const t = new Date(s.startedAt);
+          if (Number.isNaN(t.getTime())) return;
           const slot = t.getHours() * 2 + (t.getMinutes() >= 30 ? 1 : 0);
           slots[slot] = (slots[slot] || 0) + (Number(s.durationMinutes) || 0);
         });
+        const candidates = Object.keys(slots);
+        if (!candidates.length) return "暂无数据";
 
-        const best = Number(Object.keys(slots).sort((a, b) => slots[b] - slots[a])[0]);
+        const best = Number(candidates.sort((a, b) => slots[b] - slots[a])[0]);
         const sh = Math.floor(best / 2);
         const sm = best % 2 ? 30 : 0;
         const end = new Date();
         end.setHours(sh, sm + 90, 0, 0);
         return `${String(sh).padStart(2, "0")}:${String(sm).padStart(2, "0")} - ${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`;
       }
+function drawHeatmap(daily, mode = "daily") {
+        if (mode === "weekly") return drawWeeklyHeatmap(daily);
+        if (mode === "monthly") return drawMonthlyHeatmap(daily);
+        drawDailyHeatmap(daily);
+      }
 
-      function drawHeatmap(daily) {
+      function getToneColor(value, maxValue) {
+        const colors = ["#ebedf0", "#c6e48b", "#7bc96f", "#239a3b", "#196127"];
+        if (value <= 0) return colors[0];
+        // 优化：给周/月视图提供相对科学的阈值比例
+        const ratio = maxValue > 0 ? value / maxValue : 0;
+        if (ratio <= 0.25) return colors[1];
+        if (ratio <= 0.5) return colors[2];
+        if (ratio <= 0.75) return colors[3];
+        return colors[4];
+      }
+
+      // 【已修复】精准的矩阵映射与标签防重叠
+      function drawDailyHeatmap(daily) {
         const canvas = el.heatmap;
         const rect = canvas.getBoundingClientRect();
         const ratio = window.devicePixelRatio || 1;
-        const width = Math.max(640, Math.floor(rect.width));
+        const width = Math.max(300, Math.floor(rect.width));
         const height = 190;
+        canvas.width = Math.floor(width * ratio);
+        canvas.height = Math.floor(height * ratio);
 
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+
+        const colors = ["#ebedf0", "#c6e48b", "#7bc96f", "#239a3b", "#196127"];
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        start.setDate(start.getDate() - 364);
+
+        const x0 = 36, y0 = 30;
+        const usableWidth = Math.max(220, width - x0 - 8);
+        const slot = usableWidth / 53;
+        const cell = Math.max(6, Math.min(11, Math.floor(slot - 2)));
+        const gap = Math.max(1, Math.floor(slot - cell));
+
+        ctx.fillStyle = "#84807b";
+        ctx.font = "11px 'Work Sans', sans-serif";
+        ["一", "二", "三", "四", "五", "六", "日"].forEach((w, i) => {
+          ctx.fillText(w, 8, y0 + i * (cell + gap) + Math.floor(cell * 0.85));
+        });
+
+        let col = 0; // 核心修复：引入真实的列指针
+        for (let i = 0; i < 365; i++) {
+          const d = new Date(start);
+          d.setDate(start.getDate() + i);
+          const day = (d.getDay() + 6) % 7; // 周一为0
+
+          // 核心修复：只要遇到周一，并且不是第一天，指针就向右移动一列
+          if (i > 0 && day === 0) col++;
+
+          const count = daily[dayKey(d)] || 0;
+          const color = count <= 0 ? colors[0] : count <= 2 ? colors[1] : count <= 4 ? colors[2] : count <= 7 ? colors[3] : colors[4];
+
+          const x = x0 + col * (cell + gap);
+          const y = y0 + day * (cell + gap);
+
+          ctx.fillStyle = color;
+          // 加入圆角视觉（需自己实现或使用基础矩形，这里使用略微缩小的精细矩形）
+          ctx.beginPath();
+          ctx.roundRect ? ctx.roundRect(x, y, cell, cell, 2) : ctx.rect(x, y, cell, cell);
+          ctx.fill();
+
+          // 核心修复：精准判定每月1号写下月份，告别错位
+          if (d.getDate() === 1) {
+            ctx.fillStyle = "#84807b";
+            ctx.fillText(`${d.getMonth() + 1}月`, x, y0 - 8);
+          }
+        }
+      }
+
+      // 【已重构】优雅的周报柱状图
+      function drawWeeklyHeatmap(daily) {
+        const canvas = el.heatmap;
+        const rect = canvas.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        const width = Math.max(300, Math.floor(rect.width));
+        const height = 190;
+        canvas.width = Math.floor(width * ratio);
+        canvas.height = Math.floor(height * ratio);
+
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+
+        const now = new Date();
+        const thisMonday = new Date(now);
+        thisMonday.setHours(0, 0, 0, 0);
+        thisMonday.setDate(thisMonday.getDate() - ((thisMonday.getDay() + 6) % 7));
+
+        const weeks = [];
+        for (let i = 23; i >= 0; i--) { // 改为显示过去半年(24周)，让柱状图不至于太拥挤
+          const start = new Date(thisMonday);
+          start.setDate(thisMonday.getDate() - i * 7);
+          let count = 0;
+          for (let d = 0; d < 7; d++) {
+            const day = new Date(start);
+            day.setDate(start.getDate() + d);
+            count += daily[dayKey(day)] || 0;
+          }
+          weeks.push({ start, count });
+        }
+
+        const maxCount = Math.max(...weeks.map((w) => w.count), 5); // 最少以 5 为基准，防止 1 个番茄就拉满
+        const x0 = 36, y0 = 30, maxBarH = 110;
+        const usableWidth = width - x0 - 20;
+        const slot = usableWidth / weeks.length;
+        const barW = Math.max(6, Math.floor(slot * 0.6)); // 柱子宽度占槽位的 60%
+
+        ctx.fillStyle = "#84807b";
+        ctx.font = "11px 'Work Sans', sans-serif";
+        ctx.fillText("番茄数", 8, y0 - 8);
+
+        let prevMonth = -1;
+        weeks.forEach((week, idx) => {
+          const h = (week.count / maxCount) * maxBarH;
+          const x = x0 + idx * slot + (slot - barW) / 2;
+          const y = y0 + maxBarH - h;
+
+          // 使用主题色（水鸭绿）作为柱子颜色，无数据为灰色地基
+          ctx.fillStyle = week.count > 0 ? "rgba(45, 127, 126, 0.85)" : "#ebedf0";
+          ctx.beginPath();
+          ctx.roundRect ? ctx.roundRect(x, y, barW, h || 2, [3, 3, 0, 0]) : ctx.rect(x, y, barW, h || 2);
+          ctx.fill();
+
+          if (week.start.getMonth() !== prevMonth) {
+            ctx.fillStyle = "#84807b";
+            ctx.fillText(`${week.start.getMonth() + 1}月`, x - 4, y0 + maxBarH + 16);
+            prevMonth = week.start.getMonth();
+          }
+        });
+      }
+
+      // 【已重构】优雅的月报柱状图
+      function drawMonthlyHeatmap(daily) {
+        const canvas = el.heatmap;
+        const rect = canvas.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        const width = Math.max(300, Math.floor(rect.width));
+        const height = 190;
+        canvas.width = Math.floor(width * ratio);
+        canvas.height = Math.floor(height * ratio);
+
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+
+        const now = new Date();
+        const months = [];
+        for (let i = 11; i >= 0; i--) {
+          const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+          let count = 0;
+          for (let day = new Date(start); day < end; day.setDate(day.getDate() + 1)) {
+            count += daily[dayKey(day)] || 0;
+          }
+          months.push({ month: start.getMonth() + 1, count });
+        }
+
+        const maxCount = Math.max(...months.map((m) => m.count), 10);
+        const x0 = 36, y0 = 30, maxBarH = 110;
+        const usableWidth = width - x0 - 20;
+        const slot = usableWidth / months.length;
+        const barW = Math.max(12, Math.floor(slot * 0.5));
+
+        ctx.fillStyle = "#84807b";
+        ctx.font = "11px 'Work Sans', sans-serif";
+        ctx.fillText("番茄数", 8, y0 - 8);
+
+        months.forEach((m, idx) => {
+          const h = (m.count / maxCount) * maxBarH;
+          const x = x0 + idx * slot + (slot - barW) / 2;
+          const y = y0 + maxBarH - h;
+
+          // 使用主题色（赤陶色）区分按月视图
+          ctx.fillStyle = m.count > 0 ? "rgba(201, 108, 74, 0.85)" : "#ebedf0";
+          ctx.beginPath();
+          ctx.roundRect ? ctx.roundRect(x, y, barW, h || 2, [4, 4, 0, 0]) : ctx.rect(x, y, barW, h || 2);
+          ctx.fill();
+
+          ctx.fillStyle = "#84807b";
+          ctx.fillText(`${m.month}月`, x + barW/2 - 8, y0 + maxBarH + 16);
+        });
+      }
+      function drawMonthlyHeatmap(daily) {
+        const canvas = el.heatmap;
+        const rect = canvas.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        const width = Math.max(300, Math.floor(rect.width));
+        const height = 190;
         canvas.width = Math.floor(width * ratio);
         canvas.height = Math.floor(height * ratio);
 
@@ -961,41 +1205,41 @@
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, width, height);
 
-        const colors = ["#ebedf0", "#c6e48b", "#7bc96f", "#239a3b", "#196127"];
-        const start = new Date();
-        start.setDate(start.getDate() - 364);
+        const now = new Date();
+        const months = [];
+        for (let i = 11; i >= 0; i--) {
+          const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+          let count = 0;
+          for (let day = new Date(start); day < end; day.setDate(day.getDate() + 1)) {
+            count += daily[dayKey(day)] || 0;
+          }
+          months.push({ month: start.getMonth() + 1, count });
+        }
 
-        const cell = 10;
-        const gap = 3;
-        const x0 = 34;
-        const y0 = 30;
+        const maxCount = Math.max(...months.map((m) => m.count), 0);
+        const x0 = 20;
+        const y0 = 46;
+        const usableWidth = width - 40;
+        const slot = usableWidth / months.length;
+        const cellWidth = Math.max(16, Math.floor(slot - 6));
 
         ctx.fillStyle = "#6d6a66";
         ctx.font = "11px Segoe UI";
-        ["一", "二", "三", "四", "五", "六", "日"].forEach((w, i) => {
-          ctx.fillText(w, 8, y0 + i * (cell + gap) + 9);
+        ctx.fillText("按月热力图（过去 12 个月）", 12, 20);
+
+        months.forEach((m, idx) => {
+          const x = x0 + idx * slot;
+          ctx.fillStyle = getToneColor(m.count, maxCount);
+          ctx.fillRect(x, y0, cellWidth, 96);
+          ctx.fillStyle = "#8e8378";
+          ctx.font = "10px Segoe UI";
+          ctx.fillText(`${m.month}月`, x, 156);
         });
 
-        let prevMonth = -1;
-        for (let i = 0; i < 365; i++) {
-          const d = new Date(start);
-          d.setDate(start.getDate() + i);
-          const count = daily[dayKey(d)] || 0;
-          const color = count <= 0 ? colors[0] : count <= 2 ? colors[1] : count <= 4 ? colors[2] : count <= 7 ? colors[3] : colors[4];
-          const week = Math.floor(i / 7);
-          const day = (d.getDay() + 6) % 7;
-          const x = x0 + week * (cell + gap);
-          const y = y0 + day * (cell + gap);
-
-          ctx.fillStyle = color;
-          ctx.fillRect(x, y, cell, cell);
-
-          if (d.getDate() <= 7 && d.getMonth() !== prevMonth) {
-            ctx.fillStyle = "#8e8378";
-            ctx.fillText(`${d.getMonth() + 1}月`, x, 14);
-            prevMonth = d.getMonth();
-          }
-        }
+        ctx.fillStyle = "#8e8378";
+        ctx.font = "10px Segoe UI";
+        ctx.fillText(`最大月专注: ${maxCount} 个番茄`, 12, 176);
       }
     </script>
   </body>
