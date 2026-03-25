@@ -84,9 +84,12 @@
 
 双击后自动启动本地服务并用 Edge 打开页面。
 
+如果 `dist/tomato.jpeg` 存在，打包时会自动转换为 `dist/tomato.ico` 并作为 exe 图标。
+
 ---
 
 ## 依赖安装
 
 ```bash
 pip install -r requirements.txt
+```

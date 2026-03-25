@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from build_icon_helper import build_icon_from_dist_jpeg
+
 
 def main() -> None:
     try:
@@ -13,17 +15,20 @@ def main() -> None:
     app_file = root / "run_pomodoro.py"
 
     exe_name = "PomodoroFocus"
+    icon_path = build_icon_from_dist_jpeg(root)
 
-    pyinstaller.run(
-        [
-            str(app_file),
-            f"--name={exe_name}",
-            "--onefile",
-            "--windowed",
-            "--clean",
-            "--noconfirm",
-        ]
-    )
+    args = [
+        str(app_file),
+        f"--name={exe_name}",
+        "--onefile",
+        "--windowed",
+        "--clean",
+        "--noconfirm",
+    ]
+    if icon_path is not None:
+        args.append(f"--icon={icon_path}")
+
+    pyinstaller.run(args)
 
     dist_exe = root / "dist" / f"{exe_name}.exe"
     if dist_exe.exists():
