@@ -415,11 +415,12 @@
           <div>
             <div class="heat-header">
               <h3>专注热力图与周报</h3>
-              <select id="heatmap-mode" class="heat-select">
-                <option value="daily">按天</option>
-                <option value="weekly">按周</option>
-                <option value="monthly">按月</option>
-              </select>
+<select id="heatmap-mode" class="heat-select">
+  <option value="daily">按天 (24小时分布)</option>
+  <option value="weekly">按周 (近7天对比)</option>
+  <option value="monthly">按月 (近30天趋势)</option>
+  <option value="yearly">按年 (年度打卡阵列)</option>
+</select>
             </div>
             <div class="hint" id="weekly" style="margin-top: 10px;">本周番茄 0 | 连续打卡 0 天 | 黄金时间段 暂无数据</div>
             <canvas id="heatmap"></canvas>
@@ -1000,25 +1001,113 @@
         end.setHours(sh, sm + 90, 0, 0);
         return `${String(sh).padStart(2, "0")}:${String(sm).padStart(2, "0")} - ${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`;
       }
-function drawHeatmap(daily, mode = "daily") {
+// 【路由枢纽】分配对应的绘图模式
+      function drawHeatmap(daily, mode = "daily") {
+        if (mode === "yearly") return drawYearlyHeatmap(daily);
         if (mode === "weekly") return drawWeeklyHeatmap(daily);
         if (mode === "monthly") return drawMonthlyHeatmap(daily);
-        drawDailyHeatmap(daily);
+        // 默认显示今天的按小时分布
+        drawDailyHourlyHeatmap();
       }
 
-      function getToneColor(value, maxValue) {
-        const colors = ["#ebedf0", "#c6e48b", "#7bc96f", "#239a3b", "#196127"];
-        if (value <= 0) return colors[0];
-        // 优化：给周/月视图提供相对科学的阈值比例
-        const ratio = maxValue > 0 ? value / maxValue : 0;
-        if (ratio <= 0.25) return colors[1];
-        if (ratio <= 0.5) return colors[2];
-        if (ratio <= 0.75) return colors[3];
-        return colors[4];
+      // 辅助函数：绘制 Y 轴和背景网格线
+      function drawChartGrid(ctx, x0, y0, width, height, maxVal) {
+        const steps = 4;
+        ctx.fillStyle = "#999999";
+        ctx.font = "10px 'Work Sans', sans-serif";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.lineWidth = 1;
+
+        for (let i = 0; i <= steps; i++) {
+          const val = Math.round(maxVal - (maxVal / steps) * i);
+          const y = y0 + (height / steps) * i;
+          ctx.fillText(val, x0 - 8, y);
+          ctx.beginPath();
+          ctx.strokeStyle = i === steps ? "#dcdcdc" : "#f0f0f0";
+          ctx.moveTo(x0, y);
+          ctx.lineTo(x0 + width, y);
+          ctx.stroke();
+        }
       }
 
-      // 【已修复】精准的矩阵映射与标签防重叠
-      function drawDailyHeatmap(daily) {
+      // 【新增】最近 24 小时分布 - 渐变柱状图 (以分钟为单位)
+      function drawDailyHourlyHeatmap() {
+        const canvas = el.heatmap;
+        const rect = canvas.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        const width = Math.max(300, Math.floor(rect.width));
+        const height = 190;
+        canvas.width = Math.floor(width * ratio);
+        canvas.height = Math.floor(height * ratio);
+
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+
+        // 统计今天 0-23 点每小时的专注分钟数
+        const hourly = new Array(24).fill(0);
+        const todayStr = dayKey(new Date());
+
+        sessions.forEach((s) => {
+          if (s.phase !== "work" || !s.completed || !s.startedAt) return;
+          const d = new Date(s.startedAt);
+          if (dayKey(d) === todayStr) {
+            // 将时长累加到专注开始的小时段内
+            hourly[d.getHours()] += Number(s.durationMinutes) || 0;
+          }
+        });
+
+        // Y轴最大值至少为 60 分钟，以 20 向上取整
+        const maxCount = Math.max(60, Math.ceil(Math.max(...hourly) / 20) * 20);
+        const x0 = 36, y0 = 30, chartW = width - x0 - 20, chartH = 120;
+
+        drawChartGrid(ctx, x0, y0, chartW, chartH, maxCount);
+
+        const slot = chartW / 24;
+        const barW = Math.max(4, Math.floor(slot * 0.65)); // 24根柱子比较密，控制好宽度
+
+        hourly.forEach((minutes, idx) => {
+          const h = (minutes / maxCount) * chartH;
+          const x = x0 + idx * slot + (slot - barW) / 2;
+          const y = y0 + chartH - h;
+
+          if (minutes > 0) {
+            // 为当天的图表使用专属的“赤陶色”渐变
+            let gradient = ctx.createLinearGradient(0, y, 0, y0 + chartH);
+            gradient.addColorStop(0, '#e18d6f');
+            gradient.addColorStop(1, 'rgba(201, 108, 74, 0.3)');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.roundRect ? ctx.roundRect(x, y, barW, h, [3, 3, 0, 0]) : ctx.rect(x, y, barW, h);
+            ctx.fill();
+
+            // 如果该小时专注超过 10 分钟，在顶部显示具体数值
+            if (minutes >= 10) {
+              ctx.fillStyle = "#666";
+              ctx.font = "bold 9px 'Work Sans', monospace";
+              ctx.textAlign = "center";
+              ctx.fillText(Math.round(minutes), x + barW / 2, y - 5);
+            }
+          }
+
+          // X 轴文字: 每隔 4 小时标注一次，防止文字重叠挤在一块
+          if (idx % 4 === 0 || idx === 23) {
+            ctx.fillStyle = "#84807b";
+            ctx.font = "10px 'Work Sans'";
+            ctx.textAlign = "center";
+            ctx.fillText(idx + "点", x + barW / 2, y0 + chartH + 18);
+          }
+        });
+
+        ctx.fillStyle = "#84807b";
+        ctx.textAlign = "left";
+        ctx.fillText("单位: 分钟 (今日)", 8, 16);
+      }
+
+      // 【原按天图变更为：按年】(年度像素阵列)
+      function drawYearlyHeatmap(daily) {
         const canvas = el.heatmap;
         const rect = canvas.getBoundingClientRect();
         const ratio = window.devicePixelRatio || 1;
@@ -1044,17 +1133,17 @@ function drawHeatmap(daily, mode = "daily") {
 
         ctx.fillStyle = "#84807b";
         ctx.font = "11px 'Work Sans', sans-serif";
+        ctx.textAlign = "left";
         ["一", "二", "三", "四", "五", "六", "日"].forEach((w, i) => {
           ctx.fillText(w, 8, y0 + i * (cell + gap) + Math.floor(cell * 0.85));
         });
 
-        let col = 0; // 核心修复：引入真实的列指针
+        let col = 0;
         for (let i = 0; i < 365; i++) {
           const d = new Date(start);
           d.setDate(start.getDate() + i);
-          const day = (d.getDay() + 6) % 7; // 周一为0
+          const day = (d.getDay() + 6) % 7;
 
-          // 核心修复：只要遇到周一，并且不是第一天，指针就向右移动一列
           if (i > 0 && day === 0) col++;
 
           const count = daily[dayKey(d)] || 0;
@@ -1064,12 +1153,10 @@ function drawHeatmap(daily, mode = "daily") {
           const y = y0 + day * (cell + gap);
 
           ctx.fillStyle = color;
-          // 加入圆角视觉（需自己实现或使用基础矩形，这里使用略微缩小的精细矩形）
           ctx.beginPath();
           ctx.roundRect ? ctx.roundRect(x, y, cell, cell, 2) : ctx.rect(x, y, cell, cell);
           ctx.fill();
 
-          // 核心修复：精准判定每月1号写下月份，告别错位
           if (d.getDate() === 1) {
             ctx.fillStyle = "#84807b";
             ctx.fillText(`${d.getMonth() + 1}月`, x, y0 - 8);
@@ -1077,7 +1164,7 @@ function drawHeatmap(daily, mode = "daily") {
         }
       }
 
-      // 【已重构】优雅的周报柱状图
+      // 最近 7 天 - 渐变圆角柱状图 (原封不动)
       function drawWeeklyHeatmap(daily) {
         const canvas = el.heatmap;
         const rect = canvas.getBoundingClientRect();
@@ -1091,105 +1178,58 @@ function drawHeatmap(daily, mode = "daily") {
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         ctx.clearRect(0, 0, width, height);
 
-        const now = new Date();
-        const thisMonday = new Date(now);
-        thisMonday.setHours(0, 0, 0, 0);
-        thisMonday.setDate(thisMonday.getDate() - ((thisMonday.getDay() + 6) % 7));
-
-        const weeks = [];
-        for (let i = 23; i >= 0; i--) { // 改为显示过去半年(24周)，让柱状图不至于太拥挤
-          const start = new Date(thisMonday);
-          start.setDate(thisMonday.getDate() - i * 7);
-          let count = 0;
-          for (let d = 0; d < 7; d++) {
-            const day = new Date(start);
-            day.setDate(start.getDate() + d);
-            count += daily[dayKey(day)] || 0;
-          }
-          weeks.push({ start, count });
+        const days = [];
+        const weekNames = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          days.push({
+            label: i === 0 ? "今天" : weekNames[d.getDay()],
+            count: daily[dayKey(d)] || 0
+          });
         }
 
-        const maxCount = Math.max(...weeks.map((w) => w.count), 5); // 最少以 5 为基准，防止 1 个番茄就拉满
-        const x0 = 36, y0 = 30, maxBarH = 110;
-        const usableWidth = width - x0 - 20;
-        const slot = usableWidth / weeks.length;
-        const barW = Math.max(6, Math.floor(slot * 0.6)); // 柱子宽度占槽位的 60%
+        const maxCount = Math.max(...days.map(d => d.count), 4);
+        const x0 = 36, y0 = 30, chartW = width - x0 - 20, chartH = 120;
 
-        ctx.fillStyle = "#84807b";
-        ctx.font = "11px 'Work Sans', sans-serif";
-        ctx.fillText("番茄数", 8, y0 - 8);
+        drawChartGrid(ctx, x0, y0, chartW, chartH, maxCount);
 
-        let prevMonth = -1;
-        weeks.forEach((week, idx) => {
-          const h = (week.count / maxCount) * maxBarH;
+        const slot = chartW / 7;
+        const barW = Math.min(24, slot * 0.5);
+
+        days.forEach((d, idx) => {
+          const h = (d.count / maxCount) * chartH;
           const x = x0 + idx * slot + (slot - barW) / 2;
-          const y = y0 + maxBarH - h;
+          const y = y0 + chartH - h;
 
-          // 使用主题色（水鸭绿）作为柱子颜色，无数据为灰色地基
-          ctx.fillStyle = week.count > 0 ? "rgba(45, 127, 126, 0.85)" : "#ebedf0";
-          ctx.beginPath();
-          ctx.roundRect ? ctx.roundRect(x, y, barW, h || 2, [3, 3, 0, 0]) : ctx.rect(x, y, barW, h || 2);
-          ctx.fill();
+          if (d.count > 0) {
+            ctx.fillStyle = "#666";
+            ctx.font = "bold 11px 'Work Sans', monospace";
+            ctx.textAlign = "center";
+            ctx.fillText(d.count, x + barW / 2, y - 6);
 
-          if (week.start.getMonth() !== prevMonth) {
-            ctx.fillStyle = "#84807b";
-            ctx.fillText(`${week.start.getMonth() + 1}月`, x - 4, y0 + maxBarH + 16);
-            prevMonth = week.start.getMonth();
+            let gradient = ctx.createLinearGradient(0, y, 0, y0 + chartH);
+            gradient.addColorStop(0, '#58c9cb');
+            gradient.addColorStop(1, '#8be0e1');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.roundRect ? ctx.roundRect(x, y, barW, h, [6, 6, 0, 0]) : ctx.rect(x, y, barW, h);
+            ctx.fill();
           }
-        });
-      }
-
-      // 【已重构】优雅的月报柱状图
-      function drawMonthlyHeatmap(daily) {
-        const canvas = el.heatmap;
-        const rect = canvas.getBoundingClientRect();
-        const ratio = window.devicePixelRatio || 1;
-        const width = Math.max(300, Math.floor(rect.width));
-        const height = 190;
-        canvas.width = Math.floor(width * ratio);
-        canvas.height = Math.floor(height * ratio);
-
-        const ctx = canvas.getContext("2d");
-        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-        ctx.clearRect(0, 0, width, height);
-
-        const now = new Date();
-        const months = [];
-        for (let i = 11; i >= 0; i--) {
-          const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-          let count = 0;
-          for (let day = new Date(start); day < end; day.setDate(day.getDate() + 1)) {
-            count += daily[dayKey(day)] || 0;
-          }
-          months.push({ month: start.getMonth() + 1, count });
-        }
-
-        const maxCount = Math.max(...months.map((m) => m.count), 10);
-        const x0 = 36, y0 = 30, maxBarH = 110;
-        const usableWidth = width - x0 - 20;
-        const slot = usableWidth / months.length;
-        const barW = Math.max(12, Math.floor(slot * 0.5));
-
-        ctx.fillStyle = "#84807b";
-        ctx.font = "11px 'Work Sans', sans-serif";
-        ctx.fillText("番茄数", 8, y0 - 8);
-
-        months.forEach((m, idx) => {
-          const h = (m.count / maxCount) * maxBarH;
-          const x = x0 + idx * slot + (slot - barW) / 2;
-          const y = y0 + maxBarH - h;
-
-          // 使用主题色（赤陶色）区分按月视图
-          ctx.fillStyle = m.count > 0 ? "rgba(201, 108, 74, 0.85)" : "#ebedf0";
-          ctx.beginPath();
-          ctx.roundRect ? ctx.roundRect(x, y, barW, h || 2, [4, 4, 0, 0]) : ctx.rect(x, y, barW, h || 2);
-          ctx.fill();
 
           ctx.fillStyle = "#84807b";
-          ctx.fillText(`${m.month}月`, x + barW/2 - 8, y0 + maxBarH + 16);
+          ctx.font = "11px 'Work Sans'";
+          ctx.textAlign = "center";
+          ctx.fillText(d.label, x + barW / 2, y0 + chartH + 18);
         });
+
+        ctx.fillStyle = "#84807b";
+        ctx.textAlign = "left";
+        ctx.fillText("单位: 番茄", 8, 16);
       }
+
+      // 最近 30 天 - 弥散渐变折线图 (原封不动)
       function drawMonthlyHeatmap(daily) {
         const canvas = el.heatmap;
         const rect = canvas.getBoundingClientRect();
@@ -1202,44 +1242,83 @@ function drawHeatmap(daily, mode = "daily") {
         const ctx = canvas.getContext("2d");
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, width, height);
 
-        const now = new Date();
-        const months = [];
-        for (let i = 11; i >= 0; i--) {
-          const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-          let count = 0;
-          for (let day = new Date(start); day < end; day.setDate(day.getDate() + 1)) {
-            count += daily[dayKey(day)] || 0;
-          }
-          months.push({ month: start.getMonth() + 1, count });
+        const days = [];
+        for (let i = 29; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          days.push({
+            label: `${d.getMonth() + 1}-${d.getDate()}`,
+            count: daily[dayKey(d)] || 0
+          });
         }
 
-        const maxCount = Math.max(...months.map((m) => m.count), 0);
-        const x0 = 20;
-        const y0 = 46;
-        const usableWidth = width - 40;
-        const slot = usableWidth / months.length;
-        const cellWidth = Math.max(16, Math.floor(slot - 6));
+        const maxCount = Math.max(...days.map(d => d.count), 4);
+        const x0 = 36, y0 = 30, chartW = width - x0 - 20, chartH = 120;
 
-        ctx.fillStyle = "#6d6a66";
-        ctx.font = "11px Segoe UI";
-        ctx.fillText("按月热力图（过去 12 个月）", 12, 20);
+        drawChartGrid(ctx, x0, y0, chartW, chartH, maxCount);
 
-        months.forEach((m, idx) => {
-          const x = x0 + idx * slot;
-          ctx.fillStyle = getToneColor(m.count, maxCount);
-          ctx.fillRect(x, y0, cellWidth, 96);
-          ctx.fillStyle = "#8e8378";
-          ctx.font = "10px Segoe UI";
-          ctx.fillText(`${m.month}月`, x, 156);
+        const slot = chartW / 29;
+        const points = days.map((d, i) => ({
+          x: x0 + i * slot,
+          y: y0 + chartH - (d.count / maxCount) * chartH,
+          count: d.count,
+          label: d.label
+        }));
+
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        points.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.lineTo(points[points.length - 1].x, y0 + chartH);
+        ctx.lineTo(points[0].x, y0 + chartH);
+        ctx.closePath();
+
+        let bgGradient = ctx.createLinearGradient(0, y0, 0, y0 + chartH);
+        bgGradient.addColorStop(0, 'rgba(88, 201, 203, 0.35)');
+        bgGradient.addColorStop(1, 'rgba(88, 201, 203, 0)');
+        ctx.fillStyle = bgGradient;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        points.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.strokeStyle = "#58c9cb";
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = "round";
+        ctx.stroke();
+
+        let maxPoint = points[0];
+        points.forEach((p, i) => {
+          if (p.count > maxPoint.count) maxPoint = p;
+
+          if (p.count > 0) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = "#58c9cb";
+            ctx.stroke();
+          }
+
+          if (i % 6 === 0 || i === points.length - 1) {
+            ctx.fillStyle = "#84807b";
+            ctx.font = "10px 'Work Sans'";
+            ctx.textAlign = "center";
+            ctx.fillText(p.label, p.x, y0 + chartH + 18);
+          }
         });
 
-        ctx.fillStyle = "#8e8378";
-        ctx.font = "10px Segoe UI";
-        ctx.fillText(`最大月专注: ${maxCount} 个番茄`, 12, 176);
+        if (maxPoint.count > 0) {
+          ctx.fillStyle = "#666";
+          ctx.font = "bold 11px 'Work Sans', monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(maxPoint.count + " 个", maxPoint.x, maxPoint.y - 10);
+        }
+
+        ctx.fillStyle = "#84807b";
+        ctx.textAlign = "left";
+        ctx.fillText("单位: 番茄", 8, 16);
       }
     </script>
   </body>
